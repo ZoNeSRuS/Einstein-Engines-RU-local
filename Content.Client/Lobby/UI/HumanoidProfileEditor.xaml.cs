@@ -617,6 +617,14 @@ namespace Content.Client.Lobby.UI
 
             #endregion
 
+            #region Skills
+
+            SkillsTab.Orphan();
+            CTabContainer.AddTab(SkillsTab, Loc.GetString("humanoid-profile-editor-skills-tab"));
+            InitializeSkillsTab();
+
+            #endregion
+
             #region Markings
 
             MarkingsTab.Orphan();
@@ -1012,6 +1020,7 @@ namespace Content.Client.Lobby.UI
             UpdateHeightWidthSliders();
             UpdateWeight();
             UpdateCharacterRequired();
+            UpdateSkillsTab();
 
             RefreshAntags();
             RefreshJobs();
@@ -1335,6 +1344,7 @@ namespace Content.Client.Lobby.UI
         {
             Profile = Profile?.WithAge(newAge);
             ReloadPreview();
+            UpdateSkillPointsView();
             IsDirty = true;
         }
 
@@ -1447,6 +1457,7 @@ namespace Content.Client.Lobby.UI
             UpdateWeight();
             UpdateSpeciesGuidebookIcon();
             UpdateBodyTypes(); // WD EDIT
+            UpdateSkillPointsView();
             IsDirty = true;
             ReloadProfilePreview();
             ReloadClothes(); // Species may have job-specific gear, reload the clothes

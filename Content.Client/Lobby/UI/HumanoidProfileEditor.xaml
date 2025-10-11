@@ -302,6 +302,13 @@
 
                     <ui:NeoTabContainer Name="LoadoutsTabs" VerticalExpand="True" SeparatorMargin="0" />
                 </BoxContainer>
+                <BoxContainer Name="SkillsTab" HorizontalExpand="True" Orientation="Vertical">
+                    <Label Name="SkillPointsLabel" HorizontalAlignment="Stretch" Align="Center" />
+                    <ProgressBar Name="SkillPointsBar" MaxValue="1" Value="1" MaxHeight="8" Margin="0 5" />
+                    <ScrollContainer HorizontalExpand="True" HScrollEnabled="True" VerticalExpand="True" VScrollEnabled="True">
+                        <ui:AlternatingBGContainer Name="SkillsList" HorizontalExpand="True" Orientation="Vertical" />
+                    </ScrollContainer>
+                </BoxContainer>
                 <BoxContainer Name="MarkingsTab" HorizontalExpand="True" Orientation="Vertical">
                     <ScrollContainer HorizontalExpand="True" HScrollEnabled="True" VerticalExpand="True" VScrollEnabled="True">
                         <!-- Markings -->

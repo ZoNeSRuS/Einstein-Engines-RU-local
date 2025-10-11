@@ -3,6 +3,6 @@
   specie: human
   minAge: 18
   pointsForAges:
-    20: 0.5
-    35: 0.3
-    50: 0.1
+    20: 5
+    35: 3
+    50: 1

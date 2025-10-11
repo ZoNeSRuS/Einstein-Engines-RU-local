@@ -1,8 +1,10 @@
+using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Content.Shared._White.Bark;
 using Content.Shared._White.Bark.Systems;
 using Content.Shared._White.TTS;
+using Content.Shared.AWS.Skills;
 using Content.Shared.AWS.Economy.Insurance;
 using Content.Shared.CCVar;
 using Content.Shared.Clothing.Loadouts.Prototypes;
@@ -58,6 +60,9 @@ public sealed partial class HumanoidCharacterProfile : ICharacterProfile
 
     [DataField]
     private HashSet<LoadoutPreference> _loadoutPreferences = new();
+
+    [DataField]
+    public SkillContainer SkillPreferences { get; set; } = new();
 
     [DataField]
     public string Name { get; set; } = "John Doe";
@@ -272,6 +277,7 @@ public sealed partial class HumanoidCharacterProfile : ICharacterProfile
             new HashSet<ProtoId<TraitPrototype>>(other.TraitPreferences),
             new HashSet<LoadoutPreference>(other.LoadoutPreferences))
     {
+        SkillPreferences = other.SkillPreferences?.Clone() ?? new SkillContainer();
     }
 
     /// <summary>
@@ -529,6 +535,27 @@ public sealed partial class HumanoidCharacterProfile : ICharacterProfile
         return new HumanoidCharacterProfile(this) { _loadoutPreferences = list };
     }
 
+    public HumanoidCharacterProfile WithSkillContainer(SkillContainer container)
+    {
+        var clone = new HumanoidCharacterProfile(this)
+        {
+            SkillPreferences = container.Clone(),
+        };
+        return clone;
+    }
+
+    public HumanoidCharacterProfile WithSkillLevel(ProtoId<SkillPrototype> skill, SkillLevel level)
+    {
+        var container = SkillPreferences?.Clone() ?? new SkillContainer();
+
+        if (level == SkillLevel.NonSkilled)
+            container.Skills.Remove(skill);
+        else
+            container.Skills[skill] = level;
+
+        return WithSkillContainer(container);
+    }
+
     public string Summary =>
         Loc.GetString(
             "humanoid-character-profile-summary",
@@ -559,14 +586,40 @@ public sealed partial class HumanoidCharacterProfile : ICharacterProfile
             && _antagPreferences.SequenceEqual(other._antagPreferences)
             && _traitPreferences.SequenceEqual(other._traitPreferences)
             && LoadoutPreferences.SequenceEqual(other.LoadoutPreferences)
+            && SkillPreferencesEqual(SkillPreferences, other.SkillPreferences)
             && Appearance.MemberwiseEquals(other.Appearance)
             && FlavorText == other.FlavorText;
+    }
+
+    private static bool SkillPreferencesEqual(SkillContainer? first, SkillContainer? second)
+    {
+        if (ReferenceEquals(first, second))
+            return true;
+
+        if (first is null || second is null)
+            return false;
+
+        if (first.AdditionalSkillPoints != second.AdditionalSkillPoints)
+            return false;
+
+        if (first.Skills.Count != second.Skills.Count)
+            return false;
+
+        foreach (var (skill, level) in first.Skills)
+        {
+            if (!second.Skills.TryGetValue(skill, out var other) || !Equals(level, other))
+                return false;
+        }
+
+        return true;
     }
 
     public void EnsureValid(ICommonSession session, IDependencyCollection collection)
     {
         var configManager = collection.Resolve<IConfigurationManager>();
         var prototypeManager = collection.Resolve<IPrototypeManager>();
+
+        SkillPreferences ??= new SkillContainer();
 
         if (!prototypeManager.TryIndex(Species, out var speciesPrototype) || speciesPrototype.RoundStart == false)
         {
@@ -837,6 +890,12 @@ public sealed partial class HumanoidCharacterProfile : ICharacterProfile
         hashCode.Add(_antagPreferences);
         hashCode.Add(_traitPreferences);
         hashCode.Add(_loadoutPreferences);
+        hashCode.Add(SkillPreferences.AdditionalSkillPoints);
+        foreach (var (skill, level) in SkillPreferences.Skills.OrderBy(p => p.Key))
+        {
+            hashCode.Add(skill);
+            hashCode.Add(level.GetHashCode());
+        }
         hashCode.Add(Name);
         hashCode.Add(FlavorText);
         hashCode.Add(Species);
