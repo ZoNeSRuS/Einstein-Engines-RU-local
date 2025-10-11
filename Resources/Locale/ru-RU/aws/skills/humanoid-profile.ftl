@@ -1,1 +1,0 @@
-skills-leftskillpoints = Осталось очков навыков: {$leftSkillPoints}
