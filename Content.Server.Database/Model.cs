@@ -416,6 +416,7 @@ namespace Content.Server.Database
         public float Height { get; set; } = 1f;
         public float Width { get; set; } = 1f;
         [Column(TypeName = "jsonb")] public JsonDocument? Markings { get; set; } = null!;
+        [Column(TypeName = "jsonb")] public JsonDocument? SkillPreferences { get; set; }
         public string HairName { get; set; } = null!;
         public string HairColor { get; set; } = null!;
         public string FacialHairName { get; set; } = null!;

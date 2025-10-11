@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
 using Content.Shared._White.Bark;
+using Content.Shared.AWS.Skills;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Clothing.Loadouts.Systems;
 using Content.Shared.Database;
@@ -224,7 +226,17 @@ namespace Content.Server.Database
                 }
             }
 
-            return new HumanoidCharacterProfile(
+            var loadoutPreferences = loadouts.Select(l => new LoadoutPreference(l.LoadoutName)
+            {
+                CustomName = l.CustomName,
+                CustomDescription = l.CustomDescription,
+                CustomContent = l.CustomContent, // WD EDIT
+                CustomColorTint = l.CustomColorTint,
+                CustomHeirloom = l.CustomHeirloom,
+                Selected = true,
+            }).ToHashSet();
+
+            var humanoidProfile = new HumanoidCharacterProfile(
                 profile.CharacterName,
                 profile.FlavorText,
                 profile.Species,
@@ -268,16 +280,12 @@ namespace Content.Server.Database
                 (PreferenceUnavailableMode) profile.PreferenceUnavailable,
                 antags.ToHashSet(),
                 traits.ToHashSet(),
-                loadouts.Select(l => new LoadoutPreference(l.LoadoutName)
-                {
-                    CustomName = l.CustomName,
-                    CustomDescription = l.CustomDescription,
-                    CustomContent = l.CustomContent, // WD EDIT
-                    CustomColorTint = l.CustomColorTint,
-                    CustomHeirloom = l.CustomHeirloom,
-                    Selected = true,
-                }).ToHashSet()
+                loadoutPreferences
             );
+
+            humanoidProfile.SkillPreferences = DeserializeSkillPreferences(profile.SkillPreferences);
+
+            return humanoidProfile;
         }
 
         private static Profile ConvertProfiles(HumanoidCharacterProfile humanoid, int slot, Profile? profile = null)
@@ -352,7 +360,132 @@ namespace Content.Server.Database
             profile.BarkVolume = humanoid.BarkSettings.Volume;
             // WWDP EDIT END
 
+            profile.SkillPreferences = SerializeSkillPreferences(humanoid.SkillPreferences);
+
             return profile;
+        }
+
+        private static SkillContainer DeserializeSkillPreferences(JsonDocument? document)
+        {
+            if (document is null)
+                return new SkillContainer();
+
+            try
+            {
+                var dto = document.Deserialize<DbSkillContainer>();
+                if (dto is null)
+                    return new SkillContainer();
+
+                return dto.ToSkillContainer();
+            }
+            catch (JsonException)
+            {
+                return new SkillContainer();
+            }
+        }
+
+        private static JsonDocument? SerializeSkillPreferences(SkillContainer? container)
+        {
+            if (container is null)
+                return null;
+
+            var dto = DbSkillContainer.FromSkillContainer(container);
+            if (dto is null)
+                return null;
+
+            return JsonSerializer.SerializeToDocument(dto);
+        }
+
+        private sealed class DbSkillContainer
+        {
+            public Dictionary<string, int> Skills { get; set; } = new();
+            public Dictionary<string, List<int>> Unblocked { get; set; } = new();
+            public Dictionary<string, List<int>> Blocked { get; set; } = new();
+            public Dictionary<string, int> Default { get; set; } = new();
+            public int AdditionalPoints { get; set; }
+
+            public SkillContainer ToSkillContainer()
+            {
+                var container = new SkillContainer
+                {
+                    AdditionalSkillPoints = AdditionalPoints,
+                };
+
+                foreach (var (skillId, levelValue) in Skills)
+                {
+                    if (Enum.IsDefined(typeof(SkillLevel), levelValue))
+                        container.Skills[new ProtoId<SkillPrototype>(skillId)] = (SkillLevel) levelValue;
+                }
+
+                foreach (var (skillId, levels) in Unblocked)
+                {
+                    var proto = new ProtoId<SkillPrototype>(skillId);
+                    container.UnblockedSkillLevels[proto] = levels
+                        .Where(value => Enum.IsDefined(typeof(SkillLevel), value))
+                        .Select(value => (Enum) (SkillLevel) value)
+                        .ToList();
+                }
+
+                foreach (var (skillId, levels) in Blocked)
+                {
+                    var proto = new ProtoId<SkillPrototype>(skillId);
+                    container.BlockedSkillLevels[proto] = levels
+                        .Where(value => Enum.IsDefined(typeof(SkillLevel), value))
+                        .Select(value => (Enum) (SkillLevel) value)
+                        .ToList();
+                }
+
+                foreach (var (skillId, levelValue) in Default)
+                {
+                    if (!Enum.IsDefined(typeof(SkillLevel), levelValue))
+                        continue;
+
+                    container.DefaultSkillLevels[new ProtoId<SkillPrototype>(skillId)] = (SkillLevel) levelValue;
+                }
+
+                return container;
+            }
+
+            public static DbSkillContainer? FromSkillContainer(SkillContainer? container)
+            {
+                if (container is null)
+                    return null;
+
+                var dto = new DbSkillContainer
+                {
+                    AdditionalPoints = container.AdditionalSkillPoints,
+                };
+
+                foreach (var (skillId, level) in container.Skills)
+                {
+                    if (level is SkillLevel skillLevel)
+                        dto.Skills[skillId.Id] = (int) skillLevel;
+                }
+
+                foreach (var (skillId, levels) in container.UnblockedSkillLevels)
+                {
+                    dto.Unblocked[skillId.Id] = levels
+                        .OfType<SkillLevel>()
+                        .Select(level => (int) level)
+                        .ToList();
+                }
+
+                foreach (var (skillId, levels) in container.BlockedSkillLevels)
+                {
+                    dto.Blocked[skillId.Id] = levels
+                        .OfType<SkillLevel>()
+                        .Select(level => (int) level)
+                        .ToList();
+                }
+
+                foreach (var (skillId, level) in container.DefaultSkillLevels)
+                {
+                    if (level is SkillLevel skillLevel)
+                        dto.Default[skillId.Id] = (int) skillLevel;
+                }
+
+                return dto;
+            }
         }
         #endregion
 

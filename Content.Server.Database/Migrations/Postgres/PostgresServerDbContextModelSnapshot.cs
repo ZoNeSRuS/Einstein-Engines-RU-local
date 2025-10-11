@@ -997,6 +997,10 @@ namespace Content.Server.Database.Migrations.Postgres
                         .HasColumnType("text")
                         .HasColumnName("sex");
 
+                    b.Property<JsonDocument>("SkillPreferences")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("skill_preferences");
+
                     b.Property<string>("SkinColor")
                         .IsRequired()
                         .HasColumnType("text")
