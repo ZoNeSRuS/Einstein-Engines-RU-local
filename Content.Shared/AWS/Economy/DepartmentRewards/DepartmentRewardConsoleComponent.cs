@@ -47,16 +47,16 @@ public sealed partial class DepartmentRewardConsoleComponent : Component
     public string PlaceholderRewardText = string.Empty;
 
     [ViewVariables(VVAccess.ReadWrite), DataField("failCooldown")]
-    public TimeSpan FailCooldown = TimeSpan.FromMinutes(30);
+    public TimeSpan FailCooldown = TimeSpan.FromSeconds(30);
 
     [ViewVariables(VVAccess.ReadWrite)]
     public TimeSpan? NextTimerUpdate;
 
     [DataField("midUnlockOffset")]
-    public TimeSpan MidUnlockOffset = TimeSpan.FromMinutes(40);
+    public TimeSpan MidUnlockOffset = TimeSpan.FromSeconds(60);
 
     [DataField("lateUnlockOffset")]
-    public TimeSpan LateUnlockOffset = TimeSpan.FromMinutes(80);
+    public TimeSpan LateUnlockOffset = TimeSpan.FromSeconds(90);
 
     [DataField("startUnlockOffset")]
     public TimeSpan StartUnlockOffset = TimeSpan.Zero;

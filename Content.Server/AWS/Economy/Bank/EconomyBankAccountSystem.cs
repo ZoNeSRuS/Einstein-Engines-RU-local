@@ -73,7 +73,6 @@ namespace Content.Server.AWS.Economy.Bank
             SubscribeLocalEvent<EconomyManagementConsoleComponent, EconomyManagementConsoleChangeHolderIDMessage>(OnManagementConsoleChangeHolderIDMessage);
             SubscribeLocalEvent<EconomyManagementConsoleComponent, EconomyManagementConsoleInitAccountOnHolderMessage>(OnManagementConsoleInitAccountOnHolderMessage);
             SubscribeLocalEvent<EconomyManagementConsoleComponent, EconomyManagementConsolePayBonusMessage>(OnManagementConsolePayBonusMessage);
-
         }
 
         private ulong ScaleSalary(ulong value)
@@ -501,10 +500,13 @@ namespace Content.Server.AWS.Economy.Bank
             var account = entity.Value.Comp;
             if (!addition)
             {
-                if (!allowOverdraw && account.Balance - amount < 0)
+                if (!allowOverdraw && account.Balance < amount)
                     return false;
 
-                account.Balance -= amount;
+                if (allowOverdraw && account.Balance < amount)
+                    account.Balance = 0;
+                else
+                    account.Balance -= amount;
                 return true;
             }
 
