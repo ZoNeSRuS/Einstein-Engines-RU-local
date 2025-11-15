@@ -40,49 +40,88 @@ public sealed class DepartmentRewardConsoleState : BoundUserInterfaceState
 public sealed class DepartmentRewardTaskState
 {
     public DepartmentRewardStage Stage;
-    public string StageLabel;
-    public string Title;
-    public string Description;
-    public string RewardText;
-    public string StatusText;
     public bool Available;
     public bool Completed;
     public bool Visible;
+    public string? TitleLocId;
+    public string? TitleFallback;
+    public string? DescriptionLocId;
+    public string? DescriptionFallback;
+    public int RewardAmount;
+    public string? RewardFallback;
+    public DepartmentRewardTaskStatus Status;
+    public string? UnlockStationTimeText;
 
     public DepartmentRewardTaskState(
         DepartmentRewardStage stage,
-        string stageLabel,
-        string title,
-        string description,
-        string rewardText,
-        string statusText,
         bool available,
         bool completed,
-        bool visible)
+        bool visible,
+        string? titleLocId,
+        string? titleFallback,
+        string? descriptionLocId,
+        string? descriptionFallback,
+        int rewardAmount,
+        string? rewardFallback,
+        DepartmentRewardTaskStatus status,
+        string? unlockStationTimeText)
     {
         Stage = stage;
-        StageLabel = stageLabel;
-        Title = title;
-        Description = description;
-        RewardText = rewardText;
-        StatusText = statusText;
         Available = available;
         Completed = completed;
         Visible = visible;
+        TitleLocId = titleLocId;
+        TitleFallback = titleFallback;
+        DescriptionLocId = descriptionLocId;
+        DescriptionFallback = descriptionFallback;
+        RewardAmount = rewardAmount;
+        RewardFallback = rewardFallback;
+        Status = status;
+        UnlockStationTimeText = unlockStationTimeText;
     }
+}
+
+[Serializable, NetSerializable]
+public enum DepartmentRewardTaskStatus
+{
+    Available = 0,
+    Cooldown = 1,
+    WaitingPrevious = 2,
+    Completed = 3
 }
 
 [Serializable, NetSerializable]
 public sealed class DepartmentRewardHistoryEntry
 {
     public string TimeText;
-    public string Description;
+    public DepartmentRewardHistoryEntryType Type;
+    public string? TaskTitleLocId;
+    public string? TaskTitleFallback;
+    public int? Penalty;
+    public string? DescriptionFallback;
 
-    public DepartmentRewardHistoryEntry(string timeText, string description)
+    public DepartmentRewardHistoryEntry(
+        string timeText,
+        DepartmentRewardHistoryEntryType type,
+        string? taskTitleLocId,
+        string? taskTitleFallback,
+        int? penalty,
+        string? descriptionFallback)
     {
         TimeText = timeText;
-        Description = description;
+        Type = type;
+        TaskTitleLocId = taskTitleLocId;
+        TaskTitleFallback = taskTitleFallback;
+        Penalty = penalty;
+        DescriptionFallback = descriptionFallback;
     }
+}
+
+[Serializable, NetSerializable]
+public enum DepartmentRewardHistoryEntryType : byte
+{
+    Completed = 0,
+    Failed = 1
 }
 
 [Serializable, NetSerializable]

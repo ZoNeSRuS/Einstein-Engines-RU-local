@@ -35,12 +35,14 @@ department-reward-console-status-account = Баланс: {$balance} кредит
 department-reward-console-status-account-available = Счет готов к переводам.
 department-reward-console-status-account-blocked = Счет заблокирован ЦентКомом.
 department-reward-console-status-missing = Счет отдела не найден. Свяжитесь с ЦентКом.
-department-reward-stage-start = Стартовая задача
-department-reward-stage-mid = Средняя задача
+department-reward-stage-start = Начальная задача
+department-reward-stage-mid = Серединная задача
 department-reward-stage-late = Поздняя задача
-department-reward-stage-available = Готово к подтверждению
+department-reward-stage-available = Готова к подтверждению
 department-reward-stage-completed = Задача выполнена
 department-reward-stage-wait-previous = Сначала завершите предыдущую задачу
+department-reward-console-stage-unlocktime = Станет доступна в {$time}
+
 
 department-reward-cargo-start-deliver-title = Пополните запас материалов
 department-reward-cargo-start-deliver-desc = Доставьте три ящика базовых ресурсов (металл, стекло или пластик) до начала высокой нагрузки.
@@ -60,3 +62,8 @@ department-reward-cargo-late-armory-title = Пополните арсенал б
 department-reward-cargo-late-armory-desc = Доставьте лазерное оружие, защитное снаряжение и боеприпасы в оружейную.
 department-reward-cargo-late-centcom-title = Отправьте десятину ЦентКому
 department-reward-cargo-late-centcom-desc = Соберите ящик с ценностями (золото, плазма, уран) и отправьте его на ЦентКом.
+
+ent-DepartmentRewardConsoleBase = Консоль наград отдела
+    .desc = Терминал, выдающий поручения и премии для департаментов.
+ent-DepartmentRewardConsoleCargo = Консоль наград отдела снабжения
+    .desc = Консоль снабжения для отслеживания заданий и выплат.

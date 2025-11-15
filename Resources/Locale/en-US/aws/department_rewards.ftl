@@ -41,6 +41,12 @@ department-reward-stage-late = Late task
 department-reward-stage-available = Ready for confirmation
 department-reward-stage-completed = Task completed
 department-reward-stage-wait-previous = Complete the previous task first
+department-reward-console-stage-unlocktime = Unlocks at {$time}
+
+ent-DepartmentRewardConsoleBase = Department Reward Console
+    .desc = A terminal that issues departmental tasks and bonus payouts.
+ent-DepartmentRewardConsoleCargo = Department Reward Console (Cargo)
+    .desc = A supply department console for tracking tasks and bonuses.
 
 department-reward-cargo-start-deliver-title = Refill the raw material stockpile
 department-reward-cargo-start-deliver-desc = Accept and deliver three shipments of basic materials (metal, glass, or plastic) before the shift ramps up.

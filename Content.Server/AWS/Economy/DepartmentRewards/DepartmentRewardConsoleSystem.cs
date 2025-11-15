@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Content.Server.AWS.Economy.Bank;
+using Content.Server.GameTicking;
 using Content.Server.Popups;
 using Content.Server.UserInterface;
-using Content.Server.AWS.Economy.Bank;
 using Content.Shared.AWS.Economy.DepartmentRewards;
 using Content.Shared.Access;
 using Content.Shared.Access.Components;
@@ -25,6 +26,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly EconomyBankAccountSystem _bank = default!;
+    [Dependency] private readonly GameTicker _gameTicker = default!;
 
     private const string RewardSourceAccountId = "NT-CentCom";
 
@@ -120,8 +122,10 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             return;
         }
 
-        AddHistoryEntry(component, Loc.GetString("department-reward-console-history-task-complete",
-            ("task", runtime.Title ?? component.PlaceholderTaskTitle)));
+        AddHistoryEntry(component,
+            DepartmentRewardHistoryEntryType.Completed,
+            runtime.TitleLocId?.Id,
+            runtime.Title ?? component.PlaceholderTaskTitle);
 
         runtime.Completed = true;
 
@@ -148,8 +152,13 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             return;
         }
 
-        var penalty = (int) MathF.Ceiling(runtime.Reward * runtime.PenaltyMultiplier);
-        if (!_bank.TryForceDebit(component.DepartmentId, (ulong) penalty,
+        var penaltyValue = (long) MathF.Ceiling(runtime.Reward * runtime.PenaltyMultiplier);
+        if (penaltyValue < 0)
+            penaltyValue = 0;
+        else if (penaltyValue > long.MaxValue)
+            penaltyValue = long.MaxValue;
+
+        if (!_bank.TryForceDebit(component.DepartmentId, (ulong) penaltyValue,
                 Loc.GetString("department-reward-console-bank-penalty-reason",
                     ("department", component.DepartmentName),
                     ("task", runtime.Title ?? component.PlaceholderTaskTitle))))
@@ -158,9 +167,11 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             return;
         }
 
-        AddHistoryEntry(component, Loc.GetString("department-reward-console-history-task-failed",
-            ("task", runtime.Title ?? component.PlaceholderTaskTitle),
-            ("penalty", penalty)));
+        AddHistoryEntry(component,
+            DepartmentRewardHistoryEntryType.Failed,
+            runtime.TitleLocId?.Id,
+            runtime.Title ?? component.PlaceholderTaskTitle,
+            penaltyValue);
 
         AssignStageTask(component, stage, component.FailCooldown);
         UpdateConsoleUi(uid, component);
@@ -213,29 +224,47 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         foreach (var stage in StageOrder)
         {
             var data = GetStageRuntime(component, stage);
-            var title = data.Title ?? component.PlaceholderTaskTitle;
-            var description = data.Description ?? component.PlaceholderTaskDescription;
-            var rewardText = data.Reward > 0
-                ? Loc.GetString("department-reward-console-reward-amount", ("amount", data.Reward))
-                : component.PlaceholderRewardText;
-            var stageLabel = GetStageLabel(stage);
+            var titleFallback = data.Title ?? component.PlaceholderTaskTitle;
+            var descriptionFallback = data.Description ?? component.PlaceholderTaskDescription;
+            var titleLocId = data.TitleLocId?.Id;
+            var descriptionLocId = data.DescriptionLocId?.Id;
+            var rewardAmount = data.Reward;
+            var rewardFallback = component.PlaceholderRewardText;
 
             var isUnlocked = _timing.CurTime >= data.UnlockTime;
             var previousCompleted = ArePreviousStagesCompleted(component, stage);
             var available = isUnlocked && previousCompleted && !data.Completed;
 
-            string stageStatus;
-            if (data.Completed)
-                stageStatus = Loc.GetString("department-reward-stage-completed");
-            else if (!isUnlocked)
-                stageStatus = Loc.GetString("department-reward-console-stage-cooldown", ("time", FormatCountdown(data.UnlockTime - _timing.CurTime)));
-            else if (!previousCompleted)
-                stageStatus = Loc.GetString("department-reward-stage-wait-previous");
-            else
-                stageStatus = Loc.GetString("department-reward-stage-available");
-
             var visible = isUnlocked && previousCompleted;
-            tasks.Add(new DepartmentRewardTaskState(stage, stageLabel, title, description, rewardText, stageStatus, available, data.Completed, visible));
+            var status = DepartmentRewardTaskStatus.Available;
+            string? unlockStationTimeText = null;
+            if (data.Completed)
+            {
+                status = DepartmentRewardTaskStatus.Completed;
+            }
+            else if (!isUnlocked)
+            {
+                status = DepartmentRewardTaskStatus.Cooldown;
+                unlockStationTimeText = FormatStationTime(GetStationTime(data.UnlockTime));
+            }
+            else if (!previousCompleted)
+            {
+                status = DepartmentRewardTaskStatus.WaitingPrevious;
+            }
+
+            tasks.Add(new DepartmentRewardTaskState(
+                stage,
+                available,
+                data.Completed,
+                visible,
+                titleLocId,
+                titleFallback,
+                descriptionLocId,
+                descriptionFallback,
+                rewardAmount,
+                rewardFallback,
+                status,
+                unlockStationTimeText));
         }
 
         return new DepartmentRewardConsoleState(
@@ -249,13 +278,38 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             history);
     }
 
-    private void AddHistoryEntry(DepartmentRewardConsoleComponent component, string description)
+    private void AddHistoryEntry(DepartmentRewardConsoleComponent component,
+        DepartmentRewardHistoryEntryType type,
+        string? taskTitleLocId,
+        string taskTitleFallback,
+        int? penalty = null)
     {
-        var time = _timing.CurTime;
-        var entry = new DepartmentRewardHistoryEntry($"{time.Hours:00}:{time.Minutes:00}", description);
+        var stationTime = GetStationTime(_timing.CurTime);
+        var entry = new DepartmentRewardHistoryEntry(
+            FormatStationTime(stationTime),
+            type,
+            taskTitleLocId,
+            taskTitleFallback,
+            penalty,
+            BuildHistoryFallback(type, taskTitleFallback, penalty));
         component.History.Insert(0, entry);
         if (component.History.Count > 5)
             component.History.RemoveAt(component.History.Count - 1);
+    }
+
+    private string BuildHistoryFallback(DepartmentRewardHistoryEntryType type, string taskTitle, int? penalty)
+    {
+        return type switch
+        {
+            DepartmentRewardHistoryEntryType.Completed => Loc.GetString(
+                "department-reward-console-history-task-complete",
+                ("task", taskTitle)),
+            DepartmentRewardHistoryEntryType.Failed => Loc.GetString(
+                "department-reward-console-history-task-failed",
+                ("task", taskTitle),
+                ("penalty", penalty ?? 0)),
+            _ => taskTitle
+        };
     }
 
     private void ScheduleTimerUpdates(DepartmentRewardConsoleComponent component)
@@ -303,7 +357,9 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         if (prototype != null)
         {
             runtime.TaskId = prototype.ID;
+            runtime.TitleLocId = prototype.Title;
             runtime.Title = Loc.GetString(prototype.Title);
+            runtime.DescriptionLocId = prototype.Description;
             runtime.Description = Loc.GetString(prototype.Description);
             runtime.Reward = prototype.RewardAmount;
             runtime.PenaltyMultiplier = prototype.PenaltyMultiplier;
@@ -311,7 +367,9 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         else
         {
             runtime.TaskId = null;
+            runtime.TitleLocId = null;
             runtime.Title = component.PlaceholderTaskTitle;
+            runtime.DescriptionLocId = null;
             runtime.Description = component.PlaceholderTaskDescription;
             runtime.Reward = 0;
             runtime.PenaltyMultiplier = DepartmentRewardConsoleComponent.DefaultPenaltyMultiplier;
@@ -372,17 +430,6 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         return true;
     }
 
-    private string GetStageLabel(DepartmentRewardStage stage)
-    {
-        return stage switch
-        {
-            DepartmentRewardStage.Start => Loc.GetString("department-reward-stage-start"),
-            DepartmentRewardStage.Mid => Loc.GetString("department-reward-stage-mid"),
-            DepartmentRewardStage.Late => Loc.GetString("department-reward-stage-late"),
-            _ => stage.ToString()
-        };
-    }
-
     private DepartmentRewardTaskPrototype? PickTaskPrototype(string departmentId, DepartmentRewardStage stage)
     {
         var pool = new List<DepartmentRewardTaskPrototype>();
@@ -403,16 +450,23 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         return _random.Pick(pool);
     }
 
-    private string FormatCountdown(TimeSpan span)
+    private string FormatStationTime(TimeSpan span)
     {
         if (span < TimeSpan.Zero)
             span = TimeSpan.Zero;
 
-        var minutes = (int) span.TotalMinutes;
-        if (minutes > 99)
-            minutes = 99;
-        var seconds = span.Seconds;
-        return $"{minutes:00}:{seconds:00}";
+        var minutes = Math.Floor(span.TotalMinutes);
+        var rounded = TimeSpan.FromMinutes(minutes);
+        return rounded.ToString("hh\\:mm");
+    }
+
+    private TimeSpan GetStationTime(TimeSpan absolute)
+    {
+        var start = _gameTicker.RoundStartTimeSpan;
+        if (absolute <= start)
+            return TimeSpan.Zero;
+
+        return absolute - start;
     }
 
     private bool HasAuthorizedAccess(EntityUid card)

@@ -71,11 +71,36 @@ public sealed partial class DepartmentRewardConsoleWindow : FancyWindow
         foreach (var entry in history)
         {
             var label = new RichTextLabel { HorizontalExpand = true };
+            var description = ResolveHistoryDescription(entry);
             var text = Loc.GetString("department-reward-console-history-entry",
                 ("time", entry.TimeText),
-                ("text", entry.Description));
+                ("text", description));
             label.SetMessage(text);
             HistoryContainer.AddChild(label);
         }
+    }
+
+    private static string ResolveHistoryDescription(DepartmentRewardHistoryEntry entry)
+    {
+        var taskText = ResolveHistoryTaskTitle(entry);
+        return entry.Type switch
+        {
+            DepartmentRewardHistoryEntryType.Completed => Loc.GetString(
+                "department-reward-console-history-task-complete",
+                ("task", taskText)),
+            DepartmentRewardHistoryEntryType.Failed => Loc.GetString(
+                "department-reward-console-history-task-failed",
+                ("task", taskText),
+                ("penalty", entry.Penalty ?? 0)),
+            _ => entry.DescriptionFallback ?? taskText
+        };
+    }
+
+    private static string ResolveHistoryTaskTitle(DepartmentRewardHistoryEntry entry)
+    {
+        if (!string.IsNullOrEmpty(entry.TaskTitleLocId))
+            return Loc.GetString(entry.TaskTitleLocId);
+
+        return entry.TaskTitleFallback ?? string.Empty;
     }
 }

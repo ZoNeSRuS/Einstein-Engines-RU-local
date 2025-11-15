@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Content.Shared.Containers.ItemSlots;
 using Robust.Shared.GameStates;
+using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared.AWS.Economy.DepartmentRewards;
@@ -82,7 +83,9 @@ public sealed partial class DepartmentRewardConsoleComponent : Component
 public sealed class DepartmentRewardStageRuntime
 {
     public ProtoId<DepartmentRewardTaskPrototype>? TaskId;
+    public LocId? TitleLocId;
     public string? Title;
+    public LocId? DescriptionLocId;
     public string? Description;
     public int Reward;
     public float PenaltyMultiplier = DepartmentRewardConsoleComponent.DefaultPenaltyMultiplier;

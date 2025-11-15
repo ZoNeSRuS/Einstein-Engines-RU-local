@@ -32,6 +32,7 @@ public sealed partial class DepartmentRewardTaskEntry : PanelContainer
 
     public void UpdateState(DepartmentRewardTaskState task, bool confirmEnabled, bool failEnabled)
     {
+        var stageLabel = GetStageLabel(task.Stage);
         if (!task.Visible)
         {
             ButtonsContainer.Visible = false;
@@ -41,10 +42,10 @@ public sealed partial class DepartmentRewardTaskEntry : PanelContainer
             StatusLabel.Visible = true;
 
             var lockedMessage = new FormattedMessage();
-            lockedMessage.AddText(task.StageLabel);
+            lockedMessage.AddText(stageLabel);
             StageTitleLabel.SetMessage(lockedMessage);
 
-            StatusLabel.SetMessage(task.StatusText);
+            StatusLabel.SetMessage(GetStatusText(task));
             PanelOverride = LockedStyle;
             return;
         }
@@ -57,13 +58,15 @@ public sealed partial class DepartmentRewardTaskEntry : PanelContainer
 
         var stageMessage = new FormattedMessage();
         stageMessage.PushColor(QuestColor);
-        stageMessage.AddText($"{task.StageLabel}: ");
-        stageMessage.AddMessage(FormattedMessage.FromMarkupPermissive(task.Title));
+        stageMessage.AddText($"{stageLabel}: ");
+        var titleText = ResolveLocalizedText(task.TitleLocId, task.TitleFallback);
+        stageMessage.AddMessage(FormattedMessage.FromMarkupPermissive(titleText));
         stageMessage.Pop();
         StageTitleLabel.SetMessage(stageMessage);
 
-        RewardLabel.Text = task.RewardText;
-        DescriptionLabel.SetMessage(task.Description);
+        RewardLabel.Text = GetRewardText(task);
+        var descriptionText = ResolveLocalizedText(task.DescriptionLocId, task.DescriptionFallback);
+        DescriptionLabel.SetMessage(FormattedMessage.FromMarkupPermissive(descriptionText));
 
         if (task.Available)
         {
@@ -76,10 +79,48 @@ public sealed partial class DepartmentRewardTaskEntry : PanelContainer
         {
             ButtonsContainer.Visible = false;
             StatusLabel.Visible = true;
-#pragma warning disable RA0007
             var statusColor = task.Completed ? "#7ed957" : "#b0b0b0";
-#pragma warning restore RA0007
-            StatusLabel.SetMessage(FormattedMessage.FromMarkup($"[color={statusColor}]{task.StatusText}[/color]"));
+            var statusText = GetStatusText(task);
+            StatusLabel.SetMessage(FormattedMessage.FromMarkup($"[color={statusColor}]{statusText}[/color]"));
         }
+    }
+
+    private static string ResolveLocalizedText(string? locId, string? fallback)
+    {
+        if (!string.IsNullOrEmpty(locId))
+            return Loc.GetString(locId);
+
+        return fallback ?? string.Empty;
+    }
+
+    private static string GetStageLabel(DepartmentRewardStage stage)
+    {
+        return stage switch
+        {
+            DepartmentRewardStage.Start => Loc.GetString("department-reward-stage-start"),
+            DepartmentRewardStage.Mid => Loc.GetString("department-reward-stage-mid"),
+            DepartmentRewardStage.Late => Loc.GetString("department-reward-stage-late"),
+            _ => stage.ToString()
+        };
+    }
+
+    private static string GetRewardText(DepartmentRewardTaskState task)
+    {
+        if (task.RewardAmount > 0)
+            return Loc.GetString("department-reward-console-reward-amount", ("amount", task.RewardAmount));
+
+        return task.RewardFallback ?? string.Empty;
+    }
+
+    private static string GetStatusText(DepartmentRewardTaskState task)
+    {
+        return task.Status switch
+        {
+            DepartmentRewardTaskStatus.Completed => Loc.GetString("department-reward-stage-completed"),
+            DepartmentRewardTaskStatus.Cooldown => Loc.GetString("department-reward-console-stage-unlocktime",
+                ("time", task.UnlockStationTimeText ?? "--:--:--")),
+            DepartmentRewardTaskStatus.WaitingPrevious => Loc.GetString("department-reward-stage-wait-previous"),
+            _ => Loc.GetString("department-reward-stage-available")
+        };
     }
 }
