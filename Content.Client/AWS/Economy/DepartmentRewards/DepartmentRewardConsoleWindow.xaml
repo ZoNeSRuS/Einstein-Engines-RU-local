@@ -6,7 +6,7 @@
     <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True" Margin="8" SeparationOverride="8">
         <BoxContainer Orientation="Horizontal" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="8">
             <!-- Summary column -->
-            <PanelContainer StyleClasses="BackgroundDark" MinWidth="400" VerticalExpand="True" SizeFlagsStretchRatio="4">
+            <PanelContainer StyleClasses="BackgroundDark" MinWidth="440" VerticalExpand="True" SizeFlagsStretchRatio="5">
                 <BoxContainer Orientation="Vertical" Margin="8" SeparationOverride="8" HorizontalExpand="True" VerticalExpand="True">
                     <BoxContainer Orientation="Horizontal" SeparationOverride="4">
                         <Label Text="{Loc 'department-reward-console-department-label-inline'}" StyleClasses="LabelBold" />
@@ -22,11 +22,14 @@
                                       VerticalExpand="True"
                                       SeparationOverride="8" />
                     </ScrollContainer>
+                    <!-- Hidden legacy buttons kept for generated references -->
+                    <Button Name="FailButton" Visible="False" />
+                    <Button Name="ConfirmButton" Visible="False" />
                 </BoxContainer>
             </PanelContainer>
 
             <!-- Content column -->
-            <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="8" SizeFlagsStretchRatio="1.5">
+            <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="8" SizeFlagsStretchRatio="1.2">
                 <PanelContainer StyleClasses="BackgroundDark" HorizontalExpand="True" MinHeight="80">
                     <BoxContainer Orientation="Vertical" Margin="8" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="6">
                         <Label Text="{Loc 'department-reward-console-status-label'}" StyleClasses="LabelBold" />
@@ -43,17 +46,6 @@
                         </ScrollContainer>
                     </BoxContainer>
                 </PanelContainer>
-
-                <BoxContainer Orientation="Horizontal" HorizontalExpand="True" SeparationOverride="8">
-                    <Button Name="FailButton"
-                            Text="{Loc 'department-reward-console-fail-button'}"
-                            StyleClasses="ButtonDanger"
-                            HorizontalExpand="True" />
-                    <Button Name="ConfirmButton"
-                            Text="{Loc 'department-reward-console-confirm-button'}"
-                            StyleClasses="ButtonSuccess"
-                            HorizontalExpand="True" />
-                </BoxContainer>
             </BoxContainer>
         </BoxContainer>
 
