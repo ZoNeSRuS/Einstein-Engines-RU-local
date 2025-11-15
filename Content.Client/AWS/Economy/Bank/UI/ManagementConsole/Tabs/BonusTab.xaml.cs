@@ -129,10 +129,14 @@ public sealed partial class BonusTab : Control
         PayerAccountOptionButton.Disabled = !priveleged;
         BonusPercentBox.LineEditDisabled = !priveleged;
         BonusPercentBox.SetButtonDisabled(!priveleged);
+        var required = CalculateBonusPayment();
+        var canAfford = _selectedPayer is { } payer &&
+                        payer.Balance >= 0 &&
+                        (ulong) payer.Balance >= required;
         PayBonusButton.Disabled = !priveleged ||
                                   _selectedPayer == null ||
                                   _selectedAccounts.Count <= 0 ||
-                                  CalculateBonusPayment() > _selectedPayer.Balance;
+                                  !canAfford;
         ClearSelectedButton.Disabled = _selectedAccounts.Count <= 0;
     }
 

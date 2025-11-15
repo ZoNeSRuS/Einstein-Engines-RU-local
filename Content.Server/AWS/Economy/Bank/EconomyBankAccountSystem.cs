@@ -111,7 +111,7 @@ namespace Content.Server.AWS.Economy.Bank
         public bool TryCreateAccount(string accountID,
                                      string accountName,
                                      ProtoId<CurrencyPrototype> allowedCurrency,
-                                     ulong balance,
+                                     long balance,
                                      ulong penalty,
                                      bool blocked,
                                      bool canReachPayDay,
@@ -164,7 +164,7 @@ namespace Content.Server.AWS.Economy.Bank
             // Setup standard starting values for account details
             var accountID = GenerateAccountId(proto.Prefix, proto.Streak, proto.NumbersPerStreak, proto.Descriptior);
             var accountName = entity.Comp.AccountName;
-            var balance = 0UL;
+            var balance = 0L;
             ProtoId<JobPrototype>? jobName = null;
             ulong? salary = null;
 
@@ -183,7 +183,7 @@ namespace Content.Server.AWS.Economy.Bank
                 var coefficient = salariesPrototype?.Coef.Next(_random) ?? 100;
                 var randomizedSalary = (ulong) Math.Round(jobEntry.Value.Sallary * (coefficient / 100d));
                 salary = ScaleSalary(randomizedSalary);
-                balance = (ulong) (jobEntry.Value.StartMoney * _random.NextDouble(0.5, 1.5));
+                balance = (long) Math.Round(jobEntry.Value.StartMoney * _random.NextDouble(0.5, 1.5));
             }
 
             var station = _stationSystem.GetOwningStation(entity);
@@ -284,7 +284,9 @@ namespace Content.Server.AWS.Economy.Bank
                 return false;
             }
 
-            if (sum > 0 && account.Value.Comp.Balance >= sum)
+            if (sum > 0 &&
+                sum <= long.MaxValue &&
+                account.Value.Comp.Balance >= (long) sum)
             {
                 Withdraw(accountHolder, atmUid, atm, sum);
                 return true;
@@ -382,10 +384,13 @@ namespace Content.Server.AWS.Economy.Bank
                 return false;
             }
 
-            if (!allowOverdraw && fromAccount.Comp.Balance < amount)
+            if (!allowOverdraw)
             {
-                errorMessage = Loc.GetString("economybanksystem-transaction-error-notenoughmoney");
-                return false;
+                if (fromAccount.Comp.Balance < 0 || (ulong) fromAccount.Comp.Balance < amount)
+                {
+                    errorMessage = Loc.GetString("economybanksystem-transaction-error-notenoughmoney");
+                    return false;
+                }
             }
 
             return TryTransferMoney(fromAccount, recipientAccount, amount, reason, allowOverdraw);
@@ -497,22 +502,39 @@ namespace Content.Server.AWS.Economy.Bank
             if (!TryGetAccount(accountID, out var entity))
                 return false;
 
+            if (amount == 0)
+                return true;
+
+            if (amount > long.MaxValue)
+                return false;
+
+            var signedAmount = (long) amount;
             var account = entity.Value.Comp;
+
             if (!addition)
             {
-                if (!allowOverdraw && account.Balance < amount)
+                if (!allowOverdraw)
+                {
+                    if (account.Balance < 0 || (ulong) account.Balance < amount)
+                        return false;
+                }
+                else if (account.Balance - signedAmount < long.MinValue)
+                {
+                    return false;
+                }
+
+                account.Balance -= signedAmount;
+            }
+            else
+            {
+                if (account.Balance > long.MaxValue - signedAmount)
                     return false;
 
-                if (allowOverdraw && account.Balance < amount)
-                    account.Balance = 0;
-                else
-                    account.Balance -= amount;
-                return true;
+                account.Balance += signedAmount;
             }
 
-            account.Balance += amount;
-
             Dirty(entity.Value);
+            RefreshInsertedAtmUis(accountID);
             return true;
         }
 
@@ -539,8 +561,11 @@ namespace Content.Server.AWS.Economy.Bank
             if (moneyHolder.Balance < amount)
                 return false;
 
+            if (amount > long.MaxValue || receiver.Balance > long.MaxValue - (long) amount)
+                return false;
+
             moneyHolder.Balance -= amount;
-            receiver.Balance += amount;
+            receiver.Balance += (long) amount;
 
             var holderId = GetMoneyHolderIdentifier(moneyHolderUid, moneyHolder);
             var receiverLog = Loc.GetString("economybanksystem-log-insert-holder",
@@ -552,6 +577,7 @@ namespace Content.Server.AWS.Economy.Bank
 
             Dirty(moneyHolderUid, moneyHolder);
             Dirty(receiverEntity);
+            RefreshInsertedAtmUis(receiver.AccountID);
             return true;
         }
 
@@ -560,13 +586,28 @@ namespace Content.Server.AWS.Economy.Bank
             if (amount <= 0)
                 return false;
 
-            var sender = senderEntity.Comp;
-            var receiver = receiverEntity.Comp;
-            if (!allowOverdraw && sender.Balance < amount)
+            if (amount > long.MaxValue)
                 return false;
 
-            sender.Balance -= amount;
-            receiver.Balance += amount;
+            var signedAmount = (long) amount;
+            var sender = senderEntity.Comp;
+            var receiver = receiverEntity.Comp;
+
+            if (!allowOverdraw)
+            {
+                if (sender.Balance < 0 || (ulong) sender.Balance < amount)
+                    return false;
+            }
+            else if (sender.Balance - signedAmount < long.MinValue)
+            {
+                return false;
+            }
+
+            if (receiver.Balance > long.MaxValue - signedAmount)
+                return false;
+
+            sender.Balance -= signedAmount;
+            receiver.Balance += signedAmount;
 
             var senderLog = Loc.GetString("economybanksystem-log-send-to",
                         ("amount", amount), ("currencyName", receiver.AllowedCurrency), ("accountId", receiver.AccountID));
@@ -582,6 +623,8 @@ namespace Content.Server.AWS.Economy.Bank
 
             Dirty(senderEntity);
             Dirty(receiverEntity);
+            RefreshInsertedAtmUis(sender.AccountID);
+            RefreshInsertedAtmUis(receiver.AccountID);
             return true;
         }
 
@@ -990,7 +1033,8 @@ namespace Content.Server.AWS.Economy.Bank
                 accountsToPay.Add(intersectedAccounts.Current.Value, bonus);
             }
 
-            if (total > payerAccount.Value.Comp.Balance)
+            var payerBalance = payerAccount.Value.Comp.Balance;
+            if (payerBalance < 0 || (ulong) payerBalance < total)
                 return;
 
             // Proceed to payment
@@ -1091,5 +1135,23 @@ namespace Content.Server.AWS.Economy.Bank
             List<EconomyBankAccountComponent> AffectedAccounts,
             List<EconomyBankAccountComponent> UnableProccess,
             List<EconomyBankAccountComponent> WereBlockedInProccess);
+
+        private void RefreshInsertedAtmUis(string accountId)
+        {
+            var query = EntityQueryEnumerator<EconomyBankATMComponent>();
+            while (query.MoveNext(out var atmUid, out var atm))
+            {
+                if (atm.CardSlot.Item is not { } card)
+                    continue;
+
+                if (!TryComp<EconomyAccountHolderComponent>(card, out var holder))
+                    continue;
+
+                if (holder.AccountID != accountId)
+                    continue;
+
+                UpdateATMUserInterface((atmUid, atm));
+            }
+        }
     }
 }

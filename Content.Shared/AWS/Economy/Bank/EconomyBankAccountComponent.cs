@@ -26,7 +26,7 @@ namespace Content.Shared.AWS.Economy.Bank
 
         [ViewVariables(VVAccess.ReadWrite)]
         [AutoNetworkedField]
-        public ulong Balance = 0;
+        public long Balance = 0;
 
         [ViewVariables(VVAccess.ReadWrite)]
         [AutoNetworkedField]

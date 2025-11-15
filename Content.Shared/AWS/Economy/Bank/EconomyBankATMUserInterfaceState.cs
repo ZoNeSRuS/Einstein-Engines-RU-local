@@ -13,7 +13,7 @@ public sealed class EconomyBankATMUserInterfaceState : BoundUserInterfaceState
 [Serializable, NetSerializable]
 public sealed class EconomyBankATMAccountInfo
 {
-    public ulong Balance;
+    public long Balance;
     public string AccountId = "";
     public string AccountName = "";
     public bool Blocked;

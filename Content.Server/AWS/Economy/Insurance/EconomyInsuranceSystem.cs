@@ -58,8 +58,9 @@ public sealed class EconomyInsuranceSystem : EconomyInsuranceSystemShared
                 var payerAccountId = insuranceInfo.DefaultFreeInsuranceProto == insuranceInfo.InsuranceProto ?
                     ntccId : insuranceInfo.PayerAccountId;
 
+                var cost = Math.Max(0, prototype.Cost);
                 if (_economy.TryGetAccount(payerAccountId, out var account)
-                    && account.Value.Comp.Balance <= (ulong) prototype.Cost)
+                    && account.Value.Comp.Balance <= cost)
                 {
                     insuranceInfo.InsuranceProto = "NonStatus";
                     UpdateIconOnCardsById(insuranceInfo.Id);

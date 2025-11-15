@@ -184,7 +184,7 @@ public sealed partial class AccountHolderTab : Control
     public void OnUpdateState(string? holderID,
                               string? accountID,
                               string? accountName,
-                              ulong? balance,
+                              long? balance,
                               ulong? penalty,
                               bool? blocked,
                               bool? canReachPayDay,

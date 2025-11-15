@@ -464,7 +464,11 @@ namespace Content.Shared.AWS.Economy.Bank
         {
             if (TryComp<EconomyAccountHolderComponent>(entity, out var accountHolder)
                 && TryGetAccount(accountHolder.AccountID, out var account))
-                return account.Value.Comp.Balance;
+            {
+                return account.Value.Comp.Balance <= 0
+                    ? 0
+                    : (ulong) account.Value.Comp.Balance;
+            }
 
             if (TryComp<EconomyMoneyHolderComponent>(entity, out var moneyHolder))
                 return moneyHolder.Balance;

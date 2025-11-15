@@ -80,10 +80,10 @@ public sealed partial class BankTransferUiFragment : BoxContainer
 
     private void RefreshTransferButton()
     {
-        var isEnabled = _bankAccount is not null &&
-                        !_bankAccount.Blocked &&
+        var isEnabled = _bankAccount is { } account &&
+                        !account.Blocked &&
                         TransferAmountBox.Value > 0 &&
-                        _bankAccount.Balance >= (ulong) TransferAmountBox.Value &&
+                        account.Balance >= (long) TransferAmountBox.Value &&
                         !string.IsNullOrWhiteSpace(GetRecipientAccountId());
         TransferButton.Disabled = !isEnabled;
     }
@@ -98,7 +98,7 @@ public sealed partial class BankTransferUiFragment : BoxContainer
 
     private void SetupMoneySpinBox(SpinBox spinBox)
     {
-        spinBox.IsValid = amount => amount >= 0 && _bankAccount is { } && (ulong) amount <= _bankAccount.Balance;
+        spinBox.IsValid = amount => amount >= 0 && _bankAccount is { } account && amount <= account.Balance;
     }
 
     private void RefreshHistory()

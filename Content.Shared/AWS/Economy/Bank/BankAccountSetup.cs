@@ -19,7 +19,7 @@ public sealed partial class BankAccountSetup
     public ProtoId<CurrencyPrototype>? AllowedCurrency;
 
     [DataField("balance")]
-    public ulong? Balance;
+    public long? Balance;
 
     [DataField("penalty")]
     public ulong? Penalty;

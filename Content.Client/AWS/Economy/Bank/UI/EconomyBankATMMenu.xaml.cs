@@ -91,17 +91,19 @@ public sealed partial class EconomyBankATMMenu : FancyWindow
 
     private void RefreshWithdrawButton()
     {
-        var isEnabled = _bankAccount is not null &&
-            !_bankAccount.Blocked &&
-            _bankAccount.Balance >= (ulong) WithdrawAmountBox.Value;
+        var isEnabled = _bankAccount is { } account &&
+            !account.Blocked &&
+            WithdrawAmountBox.Value >= 0 &&
+            account.Balance >= (long) WithdrawAmountBox.Value;
         WithdrawButton.Disabled = !isEnabled;
     }
 
     private void RefreshTransferButton()
     {
-        var isEnabled = _bankAccount is not null &&
-            !_bankAccount.Blocked &&
-            _bankAccount.Balance >= (ulong) TransferAmountBox.Value &&
+        var isEnabled = _bankAccount is { } account &&
+            !account.Blocked &&
+            TransferAmountBox.Value > 0 &&
+            account.Balance >= (long) TransferAmountBox.Value &&
             !string.IsNullOrWhiteSpace(GetRecipientAccountId());
         TransferButton.Disabled = !isEnabled;
     }
@@ -124,7 +126,7 @@ public sealed partial class EconomyBankATMMenu : FancyWindow
         spinBox.AddRightButton(10, "+10");
         spinBox.AddRightButton(100, "+100");
         spinBox.AddRightButton(1000, "+1000");
-        spinBox.IsValid = amount => amount >= 0 && _bankAccount is { } && (ulong) amount <= _bankAccount.Balance;
+        spinBox.IsValid = amount => amount >= 0 && _bankAccount is { } account && amount <= account.Balance;
     }
 
     private void RefreshHistory()

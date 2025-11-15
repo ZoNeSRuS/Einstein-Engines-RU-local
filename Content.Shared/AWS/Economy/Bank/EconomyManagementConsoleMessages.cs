@@ -34,7 +34,7 @@ public sealed class EconomyManagementConsoleUserInterfaceState : BoundUserInterf
     // Account that has been selected when performing the last action (this is kinda dumb yeah)
     public string? AccountID;
     public string? AccountName;
-    public ulong? Balance;
+    public long? Balance;
     public ulong? Penalty;
     public bool? Blocked;
     public bool? CanReachPayDay;

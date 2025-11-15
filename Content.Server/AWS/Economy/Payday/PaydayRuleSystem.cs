@@ -101,7 +101,7 @@ public sealed class PaydayRuleSystem : GameRuleSystem<PaydayRuleComponent>
             if (!TryGetPayerAccount(payerAccountId, payerCache, out var payerAccount))
                 continue;
 
-            if (payerAccount.Comp.Balance < salary)
+            if (payerAccount.Comp.Balance < 0 || (ulong) payerAccount.Comp.Balance < salary)
             {
                 var failureMessage = Loc.GetString(component.FailurePopup);
                 NotifyAccountHolder(component, account.AccountID, failureMessage);

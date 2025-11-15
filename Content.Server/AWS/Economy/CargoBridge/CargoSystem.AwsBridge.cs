@@ -159,9 +159,12 @@ public sealed partial class CargoSystem
             return;
         }
 
-        var newBalance = account.Value.Comp.Balance > int.MaxValue
+        var accountBalance = account.Value.Comp.Balance;
+        var newBalance = accountBalance > int.MaxValue
             ? int.MaxValue
-            : (int) account.Value.Comp.Balance;
+            : accountBalance < int.MinValue
+                ? int.MinValue
+                : (int) accountBalance;
 
         if (bank.Balance == newBalance)
             return;

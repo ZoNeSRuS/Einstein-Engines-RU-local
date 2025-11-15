@@ -309,7 +309,7 @@
       accountID: NT-CentCom
       accountName: Центком
       allowedCurrency: Thaler
-      balance: 18446744073709524615
+      balance: 9223372036854775807
 
 #Кассы
 - type: entity

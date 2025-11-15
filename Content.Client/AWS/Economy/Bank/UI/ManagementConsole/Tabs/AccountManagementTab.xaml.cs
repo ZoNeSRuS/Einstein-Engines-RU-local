@@ -103,7 +103,7 @@ public sealed partial class AccountManagementTab : Control
 
     public void OnUpdateState(string? accountID,
                               string? accountName,
-                              ulong? balance,
+                              long? balance,
                               ulong? penalty,
                               bool? blocked,
                               bool? canReachPayDay,
