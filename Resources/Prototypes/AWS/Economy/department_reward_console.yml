@@ -1,0 +1,39 @@
+- type: entity
+  id: DepartmentRewardConsoleBase
+  parent: BaseComputer
+  abstract: true
+  name: Консоль наград отдела
+  description: Терминал, выдающий отделу сменные задачи и награды.
+  components:
+  - type: ActivatableUI
+    singleUser: true
+    key: enum.DepartmentRewardConsoleUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.DepartmentRewardConsoleUiKey.Key:
+        type: DepartmentRewardConsoleBoundUserInterface
+  - type: ItemSlots
+  - type: DepartmentRewardConsole
+    departmentId: NT-Generic
+    departmentName: "Отдел"
+    placeholderTaskTitle: "Задача недоступна"
+    placeholderTaskDescription: "Система наград находится в разработке."
+    placeholderRewardText: "Награда: 0 кредитов"
+    cardSlot:
+      ejectSound: /Audio/Machines/id_swipe.ogg
+      insertSound: /Audio/Weapons/Guns/MagIn/batrifle_magin.ogg
+      ejectOnBreak: true
+      swap: false
+      whitelist:
+        components:
+        - IdCard
+
+- type: entity
+  id: DepartmentRewardConsoleCargo
+  parent: DepartmentRewardConsoleBase
+  name: Консоль наград карго
+  suffix: Cargo
+  components:
+  - type: DepartmentRewardConsole
+    departmentId: NT-Cargo
+    departmentName: "Карго"

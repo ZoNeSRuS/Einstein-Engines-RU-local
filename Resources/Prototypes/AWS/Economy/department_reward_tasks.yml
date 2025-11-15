@@ -1,0 +1,75 @@
+- type: departmentRewardTask
+  id: DeptRewardCargoStartDeliverMaterials
+  departmentId: NT-Cargo
+  stage: Start
+  title: department-reward-cargo-start-deliver-title
+  description: department-reward-cargo-start-deliver-desc
+  rewardAmount: 1200
+
+- type: departmentRewardTask
+  id: DeptRewardCargoStartExpeditionPrep
+  departmentId: NT-Cargo
+  stage: Start
+  title: department-reward-cargo-start-expedition-title
+  description: department-reward-cargo-start-expedition-desc
+  rewardAmount: 1500
+
+- type: departmentRewardTask
+  id: DeptRewardCargoStartSupplyCrew
+  departmentId: NT-Cargo
+  stage: Start
+  title: department-reward-cargo-start-supply-title
+  description: department-reward-cargo-start-supply-desc
+  rewardAmount: 1000
+
+- type: departmentRewardTask
+  id: DeptRewardCargoMidVip
+  departmentId: NT-Cargo
+  stage: Mid
+  title: department-reward-cargo-mid-vip-title
+  description: department-reward-cargo-mid-vip-desc
+  rewardAmount: 2200
+
+- type: departmentRewardTask
+  id: DeptRewardCargoMidOutpost
+  departmentId: NT-Cargo
+  stage: Mid
+  title: department-reward-cargo-mid-outpost-title
+  description: department-reward-cargo-mid-outpost-desc
+  rewardAmount: 2500
+
+- type: departmentRewardTask
+  id: DeptRewardCargoMidWeaponry
+  departmentId: NT-Cargo
+  stage: Mid
+  title: department-reward-cargo-mid-weaponry-title
+  description: department-reward-cargo-mid-weaponry-desc
+  rewardAmount: 2300
+  penaltyMultiplier: 1.75
+
+- type: departmentRewardTask
+  id: DeptRewardCargoLateEvac
+  departmentId: NT-Cargo
+  stage: Late
+  title: department-reward-cargo-late-evac-title
+  description: department-reward-cargo-late-evac-desc
+  rewardAmount: 3600
+  penaltyMultiplier: 2.0
+
+- type: departmentRewardTask
+  id: DeptRewardCargoLateArmory
+  departmentId: NT-Cargo
+  stage: Late
+  title: department-reward-cargo-late-armory-title
+  description: department-reward-cargo-late-armory-desc
+  rewardAmount: 3800
+  penaltyMultiplier: 2.2
+
+- type: departmentRewardTask
+  id: DeptRewardCargoLateCentcom
+  departmentId: NT-Cargo
+  stage: Late
+  title: department-reward-cargo-late-centcom-title
+  description: department-reward-cargo-late-centcom-desc
+  rewardAmount: 4200
+  penaltyMultiplier: 2.5

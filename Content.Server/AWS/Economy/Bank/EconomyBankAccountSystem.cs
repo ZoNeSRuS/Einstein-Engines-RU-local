@@ -372,7 +372,7 @@ namespace Content.Server.AWS.Economy.Bank
         }
 
         [PublicAPI]
-        public bool TrySendMoney(Entity<EconomyBankAccountComponent> fromAccount, Entity<EconomyBankAccountComponent> recipientAccount, ulong amount, string? reason, [NotNullWhen(false)] out string? errorMessage)
+        public bool TrySendMoney(Entity<EconomyBankAccountComponent> fromAccount, Entity<EconomyBankAccountComponent> recipientAccount, ulong amount, string? reason, [NotNullWhen(false)] out string? errorMessage, bool allowOverdraw = false)
         {
             errorMessage = null;
 
@@ -383,13 +383,13 @@ namespace Content.Server.AWS.Economy.Bank
                 return false;
             }
 
-            if (fromAccount.Comp.Balance < amount)
+            if (!allowOverdraw && fromAccount.Comp.Balance < amount)
             {
                 errorMessage = Loc.GetString("economybanksystem-transaction-error-notenoughmoney");
                 return false;
             }
 
-            return TryTransferMoney(fromAccount, recipientAccount, amount, reason);
+            return TryTransferMoney(fromAccount, recipientAccount, amount, reason, allowOverdraw);
         }
 
         [PublicAPI]
@@ -493,7 +493,7 @@ namespace Content.Server.AWS.Economy.Bank
             return true;
         }
 
-        private bool TryChangeAccountBalance(string accountID, ulong amount, bool addition = true)
+        private bool TryChangeAccountBalance(string accountID, ulong amount, bool addition = true, bool allowOverdraw = false)
         {
             if (!TryGetAccount(accountID, out var entity))
                 return false;
@@ -501,7 +501,7 @@ namespace Content.Server.AWS.Economy.Bank
             var account = entity.Value.Comp;
             if (!addition)
             {
-                if (account.Balance - amount < 0)
+                if (!allowOverdraw && account.Balance - amount < 0)
                     return false;
 
                 account.Balance -= amount;
@@ -553,14 +553,14 @@ namespace Content.Server.AWS.Economy.Bank
             return true;
         }
 
-        private bool TryTransferMoney(Entity<EconomyBankAccountComponent> senderEntity, Entity<EconomyBankAccountComponent> receiverEntity, ulong amount, string? reason = null)
+        private bool TryTransferMoney(Entity<EconomyBankAccountComponent> senderEntity, Entity<EconomyBankAccountComponent> receiverEntity, ulong amount, string? reason = null, bool allowOverdraw = false)
         {
             if (amount <= 0)
                 return false;
 
             var sender = senderEntity.Comp;
             var receiver = receiverEntity.Comp;
-            if (sender.Balance < amount)
+            if (!allowOverdraw && sender.Balance < amount)
                 return false;
 
             sender.Balance -= amount;
@@ -580,6 +580,21 @@ namespace Content.Server.AWS.Economy.Bank
 
             Dirty(senderEntity);
             Dirty(receiverEntity);
+            return true;
+        }
+
+        [PublicAPI]
+        public bool TryForceDebit(string accountID, ulong amount, string? logMessage = null)
+        {
+            if (amount == 0)
+                return true;
+
+            if (!TryChangeAccountBalance(accountID, amount, addition: false, allowOverdraw: true))
+                return false;
+
+            if (!string.IsNullOrEmpty(logMessage) && TryGetAccount(accountID, out var account))
+                TryAddLog(account.Value, new EconomyBankAccountLogField(_gameTiming.CurTime, logMessage));
+
             return true;
         }
 
