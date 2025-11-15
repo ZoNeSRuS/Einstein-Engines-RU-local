@@ -47,6 +47,7 @@ public sealed class DepartmentRewardTaskState
     public string StatusText;
     public bool Available;
     public bool Completed;
+    public bool Visible;
 
     public DepartmentRewardTaskState(
         DepartmentRewardStage stage,
@@ -56,7 +57,8 @@ public sealed class DepartmentRewardTaskState
         string rewardText,
         string statusText,
         bool available,
-        bool completed)
+        bool completed,
+        bool visible)
     {
         Stage = stage;
         StageLabel = stageLabel;
@@ -66,6 +68,7 @@ public sealed class DepartmentRewardTaskState
         StatusText = statusText;
         Available = available;
         Completed = completed;
+        Visible = visible;
     }
 }
 

@@ -234,7 +234,8 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             else
                 stageStatus = Loc.GetString("department-reward-stage-available");
 
-            tasks.Add(new DepartmentRewardTaskState(stage, stageLabel, title, description, rewardText, stageStatus, available, data.Completed));
+            var visible = isUnlocked && previousCompleted;
+            tasks.Add(new DepartmentRewardTaskState(stage, stageLabel, title, description, rewardText, stageStatus, available, data.Completed, visible));
         }
 
         return new DepartmentRewardConsoleState(
