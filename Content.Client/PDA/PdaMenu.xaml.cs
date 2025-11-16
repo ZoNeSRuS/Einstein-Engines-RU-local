@@ -183,11 +183,14 @@ namespace Content.Client.PDA
                 ("color", alertColor),
                 ("level", _alertLevel)
             ));
-            _instructions = Loc.GetString($"{alertLevelKey}-instructions");
-            StationAlertLevelInstructions.SetMarkup(Loc.GetString(
+            //IH - start
+            var defaultInstructionText = Loc.GetString($"{alertLevelKey}-instructions");
+            _instructions = state.InstructionCopy ?? defaultInstructionText;
+            var display = state.InstructionDisplay ?? Loc.GetString(
                 "comp-pda-ui-station-alert-level-instructions",
-                ("instructions", _instructions))
-            );
+                ("instructions", defaultInstructionText));
+            StationAlertLevelInstructions.SetMarkup(display);
+            //IH - end
 
             AddressLabel.Text = state.Address?.ToUpper() ?? " - ";
 

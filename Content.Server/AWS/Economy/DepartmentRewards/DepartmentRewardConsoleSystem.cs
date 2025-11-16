@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Content.Server.AWS.Economy.Bank;
 using Content.Server.GameTicking;
 using Content.Server.Popups;
@@ -705,6 +706,28 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         }
 
         return null;
+    }
+
+    public bool TryGetActiveDepartmentTask(EntityUid sourceUid, string departmentId, [NotNullWhen(true)] out DepartmentRewardTaskState? taskState)
+    {
+        taskState = default;
+
+        var server = EnsureServerComponent(sourceUid, out var serverUid);
+        EnsureServerDepartmentsRegistered(serverUid, server);
+
+        if (!server.Departments.TryGetValue(departmentId, out var departmentState))
+            return false;
+
+        var consoleComponent = FindDepartmentConsoleComponent(serverUid, departmentId);
+        if (consoleComponent == null)
+            return false;
+
+        EnsureStageTasksInitialized(consoleComponent, departmentState);
+        if (!TryBuildActiveTaskState(consoleComponent, departmentState, out var active))
+            return false;
+
+        taskState = active;
+        return true;
     }
 
     private readonly struct DepartmentStateKey : IEquatable<DepartmentStateKey>

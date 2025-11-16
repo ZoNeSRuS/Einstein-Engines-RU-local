@@ -21,6 +21,7 @@ using Content.Shared.Store.Components;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Shared.Containers;
+using Robust.Shared.Localization;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
@@ -193,6 +194,21 @@ namespace Content.Server.PDA
 
             var programs = _cartridgeLoader.GetAvailablePrograms(uid, loader);
             var id = CompOrNull<IdCardComponent>(pda.ContainedId);
+            //IH - start
+            var instructionEvent = new PdaCollectInstructionEvent();
+            RaiseLocalEvent(uid, instructionEvent);
+            if (!instructionEvent.Handled)
+            {
+                var alertLevelKey = pda.StationAlertLevel != null ? $"alert-level-{pda.StationAlertLevel}" : "alert-level-unknown";
+                var instructions = Loc.GetString($"{alertLevelKey}-instructions");
+                instructionEvent.DisplayText = Loc.GetString("comp-pda-ui-station-alert-level-instructions",
+                    ("instructions", instructions));
+                instructionEvent.CopyText = instructions;
+            }
+            var instructionDisplay = instructionEvent.DisplayText;
+            var instructionCopy = instructionEvent.CopyText;
+            //IH - end
+
             var state = new PdaUpdateState(
                 programs,
                 GetNetEntity(loader.ActiveProgram),
@@ -211,7 +227,9 @@ namespace Content.Server.PDA
                 pda.StationName,
                 showUplink,
                 hasInstrument,
-                address);
+                address,
+                instructionDisplay,
+                instructionCopy);
 
             _ui.SetUiState(uid, PdaUiKey.Key, state);
         }

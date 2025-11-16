@@ -17,6 +17,10 @@ namespace Content.Shared.PDA
         public bool HasUplink;
         public bool CanPlayMusic;
         public string? Address;
+        //IH - start
+        public string? InstructionDisplay;
+        public string? InstructionCopy;
+        //IH - end
 
         public PdaUpdateState(
             List<NetEntity> programs,
@@ -29,7 +33,11 @@ namespace Content.Shared.PDA
             string? stationName,
             bool hasUplink = false,
             bool canPlayMusic = false,
-            string? address = null)
+            string? address = null,
+            //IH - start
+            string? instructionDisplay = null,
+            string? instructionCopy = null)
+            //IH - end
             : base(programs, activeUI)
         {
             FlashlightEnabled = flashlightEnabled;
@@ -41,6 +49,10 @@ namespace Content.Shared.PDA
             CanPlayMusic = canPlayMusic;
             StationName = stationName;
             Address = address;
+            //IH - start
+            InstructionDisplay = instructionDisplay;
+            InstructionCopy = instructionCopy;
+            //IH - end
         }
     }
 

@@ -7,6 +7,7 @@
   components:
   - type: Pda
     id: CorporationsIDCard
+  - type: DepartmentRewardPda
   - type: Appearance
     appearanceDataInit:
       enum.PdaVisuals.PdaType:
@@ -29,6 +30,7 @@
   components:
   - type: Pda
     id: CorporationsComIDCard
+  - type: DepartmentRewardPda
   - type: Appearance
     appearanceDataInit:
       enum.PdaVisuals.PdaType:
@@ -51,6 +53,7 @@
   components:
   - type: Pda
     id: NanotrasenRepresentativeIDCard
+  - type: DepartmentRewardPda
   - type: Appearance
     appearanceDataInit:
       enum.PdaVisuals.PdaType:

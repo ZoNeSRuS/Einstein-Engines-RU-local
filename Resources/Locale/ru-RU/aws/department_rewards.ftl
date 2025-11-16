@@ -99,3 +99,9 @@ department-reward-master-console-history-entry = {$department}: {$time} - {$text
 
 ent-DepartmentRewardConsoleMaster = Консоль контроля отделов
     .desc = Командный терминал, который отображает состояние всех отделенческих консолей наград.
+department-reward-pda-instruction-display =
+    Задача: [color=white]{ $title }[/color]
+    Инструкция: [color=white]{ $instruction }[/color]
+department-reward-pda-instruction-copy = Задача: { $title }\nИнструкция: { $instruction }
+Инструкция: {  }
+

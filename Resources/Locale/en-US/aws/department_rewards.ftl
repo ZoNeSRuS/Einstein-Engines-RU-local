@@ -98,3 +98,8 @@ department-reward-cargo-late-armory-title = Armory restock initiative
 department-reward-cargo-late-armory-desc = Deliver laser weapon crates, riot gear, and ammunition to Security's armory to sustain a late-shift threat.
 department-reward-cargo-late-centcom-title = Fulfill the CentCom tithe
 department-reward-cargo-late-centcom-desc = Load a high-value goods crate (gold, plasma, uranium) and dispatch it via the shuttle to Central Command.
+department-reward-pda-instruction-display =
+    Task: [color=white]{ $title }[/color]
+    Instruction: [color=white]{ $instruction }[/color]
+department-reward-pda-instruction-copy = Task: { $title }\nInstruction: { $instruction }
+Instruction: {  }
