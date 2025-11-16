@@ -30,14 +30,6 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
     [Dependency] private readonly GameTicker _gameTicker = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
 
-    private const string RewardSourceAccountId = "NT-CentCom";
-
-    private static readonly ProtoId<AccessLevelPrototype>[] AuthorizedAccess =
-    {
-        "Captain",
-        "NanotrasenRepresentative"
-    };
-
     private static readonly DepartmentRewardStage[] StageOrder =
     {
         DepartmentRewardStage.Start,
@@ -106,7 +98,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         var state = GetDepartmentState(uid, component, out var serverUid);
         EnsureStageTasksInitialized(component, state);
 
-        if (component.CardSlot.Item is not { Valid: true } cardEntity || !HasAuthorizedAccess(cardEntity))
+        if (component.CardSlot.Item is not { Valid: true } cardEntity || !HasAuthorizedAccess(cardEntity, component))
         {
             _popup.PopupEntity(Loc.GetString("department-reward-console-popup-need-card"), uid, actor);
             return;
@@ -125,10 +117,10 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         }
 
         var reason = Loc.GetString("department-reward-console-bank-reason",
-            ("department", component.DepartmentName),
-            ("task", runtime.Title ?? component.PlaceholderTaskTitle));
+            ("department", component.GetDepartmentName()),
+            ("task", runtime.Title ?? component.GetPlaceholderTaskTitle()));
 
-        if (!_bank.TrySendMoney(RewardSourceAccountId, component.DepartmentId, (ulong) runtime.Reward, reason, out var error))
+        if (!_bank.TrySendMoney(component.RewardSourceAccountId, component.DepartmentId, (ulong) runtime.Reward, reason, out var error))
         {
             _popup.PopupEntity(error ?? Loc.GetString("department-reward-console-popup-bank-failure"), uid, actor);
             return;
@@ -138,7 +130,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             state,
             DepartmentRewardHistoryEntryType.Completed,
             runtime.TitleLocId?.Id,
-            runtime.Title ?? component.PlaceholderTaskTitle);
+            runtime.Title ?? component.GetPlaceholderTaskTitle());
 
         runtime.Completed = true;
 
@@ -154,7 +146,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         var state = GetDepartmentState(uid, component, out var serverUid);
         EnsureStageTasksInitialized(component, state);
 
-        if (component.CardSlot.Item is not { Valid: true } cardEntity || !HasAuthorizedAccess(cardEntity))
+        if (component.CardSlot.Item is not { Valid: true } cardEntity || !HasAuthorizedAccess(cardEntity, component))
         {
             _popup.PopupEntity(Loc.GetString("department-reward-console-popup-need-card"), uid, actor);
             return;
@@ -171,8 +163,8 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         var debitAmount = (ulong) penaltyValue;
         if (!_bank.TryForceDebit(component.DepartmentId, debitAmount,
                 Loc.GetString("department-reward-console-bank-penalty-reason",
-                    ("department", component.DepartmentName),
-                    ("task", runtime.Title ?? component.PlaceholderTaskTitle))))
+                    ("department", component.GetDepartmentName()),
+                    ("task", runtime.Title ?? component.GetPlaceholderTaskTitle()))))
         {
             _popup.PopupEntity(Loc.GetString("department-reward-console-popup-bank-failure"), uid, actor);
             return;
@@ -183,7 +175,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             state,
             DepartmentRewardHistoryEntryType.Failed,
             runtime.TitleLocId?.Id,
-            runtime.Title ?? component.PlaceholderTaskTitle,
+            runtime.Title ?? component.GetPlaceholderTaskTitle(),
             historyPenalty);
 
         AssignStageTask(component, state, stage, component.FailCooldown);
@@ -202,9 +194,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
     {
         EnsureStageTasksInitialized(component, state);
 
-        var department = string.IsNullOrWhiteSpace(component.DepartmentName)
-            ? Loc.GetString("department-reward-console-placeholder-department")
-            : component.DepartmentName;
+        var department = component.GetDepartmentName();
 
         var tasks = new List<DepartmentRewardTaskState>();
         var history = new List<DepartmentRewardHistoryEntry>(state.History);
@@ -238,12 +228,12 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         foreach (var stage in StageOrder)
         {
             var data = state.GetRuntime(stage);
-            var titleFallback = data.Title ?? component.PlaceholderTaskTitle;
-            var descriptionFallback = data.Description ?? component.PlaceholderTaskDescription;
+            var titleFallback = data.Title ?? component.GetPlaceholderTaskTitle();
+            var descriptionFallback = data.Description ?? component.GetPlaceholderTaskDescription();
             var titleLocId = data.TitleLocId?.Id;
             var descriptionLocId = data.DescriptionLocId?.Id;
             var rewardAmount = data.Reward;
-            var rewardFallback = component.PlaceholderRewardText;
+            var rewardFallback = component.GetPlaceholderReward();
 
             var isUnlocked = _timing.CurTime >= data.UnlockTime;
             var previousCompleted = ArePreviousStagesCompleted(state, stage);
@@ -383,9 +373,9 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         {
             runtime.TaskId = null;
             runtime.TitleLocId = null;
-            runtime.Title = component.PlaceholderTaskTitle;
+            runtime.Title = component.GetPlaceholderTaskTitle();
             runtime.DescriptionLocId = null;
-            runtime.Description = component.PlaceholderTaskDescription;
+            runtime.Description = component.GetPlaceholderTaskDescription();
             runtime.Reward = 0;
             runtime.PenaltyMultiplier = DepartmentRewardConsoleComponent.DefaultPenaltyMultiplier;
         }
@@ -443,7 +433,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
 
     private DepartmentRewardTaskPrototype? PickTaskPrototype(string departmentId, DepartmentRewardStage stage)
     {
-        var pool = new List<DepartmentRewardTaskPrototype>();
+        var pool = new List<(DepartmentRewardTaskPrototype Prototype, float Weight)>();
         foreach (var proto in _proto.EnumeratePrototypes<DepartmentRewardTaskPrototype>())
         {
             if (!string.Equals(proto.DepartmentId, departmentId, StringComparison.OrdinalIgnoreCase))
@@ -452,13 +442,28 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             if (proto.Stage != stage)
                 continue;
 
-            pool.Add(proto);
+            pool.Add((proto, Math.Max(0.01f, proto.Weight)));
         }
 
         if (pool.Count == 0)
             return null;
 
-        return _random.Pick(pool);
+        var total = 0f;
+        foreach (var entry in pool)
+        {
+            total += entry.Weight;
+        }
+
+        var target = _random.NextFloat(0f, total);
+        var running = 0f;
+        foreach (var entry in pool)
+        {
+            running += entry.Weight;
+            if (target <= running)
+                return entry.Prototype;
+        }
+
+        return pool[^1].Prototype;
     }
 
     private string FormatStationTime(TimeSpan span)
@@ -553,7 +558,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             HashCode.Combine(ServerUid, StringComparer.OrdinalIgnoreCase.GetHashCode(DepartmentId));
     }
 
-    private bool HasAuthorizedAccess(EntityUid card)
+    private bool HasAuthorizedAccess(EntityUid card, DepartmentRewardConsoleComponent component)
     {
         var tags = new HashSet<ProtoId<AccessLevelPrototype>>();
 
@@ -563,9 +568,12 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         var ev = new GetAccessTagsEvent(tags, _proto);
         RaiseLocalEvent(card, ref ev);
 
+        if (component.AuthorizedAccessTags.Count == 0)
+            return true;
+
         foreach (var tag in tags)
         {
-            foreach (var authorized in AuthorizedAccess)
+            foreach (var authorized in component.AuthorizedAccessTags)
             {
                 if (tag == authorized)
                     return true;

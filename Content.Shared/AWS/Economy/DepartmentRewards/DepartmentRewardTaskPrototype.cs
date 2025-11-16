@@ -27,4 +27,7 @@ public sealed class DepartmentRewardTaskPrototype : IPrototype
 
     [DataField]
     public float PenaltyMultiplier = 1.5f;
+
+    [DataField]
+    public float Weight = 1f;
 }

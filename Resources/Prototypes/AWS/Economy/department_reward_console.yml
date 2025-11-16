@@ -15,10 +15,6 @@
   - type: ItemSlots
   - type: DepartmentRewardConsole
     departmentId: NT-Generic
-    departmentName: "Department"
-    placeholderTaskTitle: "Task unavailable"
-    placeholderTaskDescription: "The reward program is not configured."
-    placeholderRewardText: "Reward: 0 credits"
     cardSlot:
       ejectSound: /Audio/Machines/id_swipe.ogg
       insertSound: /Audio/Weapons/Guns/MagIn/batrifle_magin.ogg
@@ -36,4 +32,4 @@
   components:
   - type: DepartmentRewardConsole
     departmentId: NT-Cargo
-    departmentName: "Cargo"
+    departmentNameLocId: department-reward-department-cargo

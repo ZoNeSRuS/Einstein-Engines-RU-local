@@ -5,6 +5,7 @@
   title: department-reward-cargo-start-deliver-title
   description: department-reward-cargo-start-deliver-desc
   rewardAmount: 1200
+  penaltyMultiplier: 1.5
 
 - type: departmentRewardTask
   id: DeptRewardCargoStartExpeditionPrep
@@ -13,6 +14,7 @@
   title: department-reward-cargo-start-expedition-title
   description: department-reward-cargo-start-expedition-desc
   rewardAmount: 1500
+  penaltyMultiplier: 1.5
 
 - type: departmentRewardTask
   id: DeptRewardCargoStartSupplyCrew
@@ -21,6 +23,7 @@
   title: department-reward-cargo-start-supply-title
   description: department-reward-cargo-start-supply-desc
   rewardAmount: 1000
+  penaltyMultiplier: 1.5
 
 - type: departmentRewardTask
   id: DeptRewardCargoMidVip
@@ -29,6 +32,7 @@
   title: department-reward-cargo-mid-vip-title
   description: department-reward-cargo-mid-vip-desc
   rewardAmount: 2200
+  penaltyMultiplier: 1.6
 
 - type: departmentRewardTask
   id: DeptRewardCargoMidOutpost
@@ -37,6 +41,7 @@
   title: department-reward-cargo-mid-outpost-title
   description: department-reward-cargo-mid-outpost-desc
   rewardAmount: 2500
+  penaltyMultiplier: 1.7
 
 - type: departmentRewardTask
   id: DeptRewardCargoMidWeaponry

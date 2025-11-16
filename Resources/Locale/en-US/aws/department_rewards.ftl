@@ -43,6 +43,7 @@ department-reward-stage-available = Ready for confirmation
 department-reward-stage-completed = Task completed
 department-reward-stage-wait-previous = Complete the previous task first
 department-reward-console-stage-unlocktime = Unlocks at {$time}
+department-reward-department-cargo = Cargo
 
 ent-DepartmentRewardConsoleBase = Department Reward Console
     .desc = A terminal that issues departmental tasks and bonus payouts.

@@ -63,8 +63,9 @@ department-reward-cargo-late-armory-title = Пополните арсенал б
 department-reward-cargo-late-armory-desc = Доставьте лазерное оружие, защитное снаряжение и боеприпасы в оружейную.
 department-reward-cargo-late-centcom-title = Отправьте десятину ЦентКому
 department-reward-cargo-late-centcom-desc = Соберите ящик с ценностями (золото, плазма, уран) и отправьте его на ЦентКом.
+department-reward-department-cargo = Карго
 
 ent-DepartmentRewardConsoleBase = Консоль наград отдела
     .desc = Терминал, выдающий поручения и премии для департаментов.
-ent-DepartmentRewardConsoleCargo = Консоль наград отдела снабжения
-    .desc = Консоль снабжения для отслеживания заданий и выплат.
+ent-DepartmentRewardConsoleCargo = Консоль наград Карго
+    .desc = Консоль Карго для отслеживания заданий и выплат.

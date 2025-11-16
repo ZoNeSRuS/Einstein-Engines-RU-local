@@ -1,5 +1,8 @@
 using System;
+using Content.Shared.Access;
 using Content.Shared.Containers.ItemSlots;
+using Robust.Shared.Localization;
+using Robust.Shared.Prototypes;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.AWS.Economy.DepartmentRewards;
@@ -21,28 +24,44 @@ public sealed partial class DepartmentRewardConsoleComponent : Component
     public string DepartmentId = "NT-Cargo";
 
     /// <summary>
-    /// Human-readable department name shown in the UI.
+    /// Source account for rewards, defaults to CentCom account.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("departmentName")]
-    public string DepartmentName = "Cargo";
+    [ViewVariables(VVAccess.ReadWrite), DataField("rewardSourceAccountId")]
+    public string RewardSourceAccountId = "NT-CentCom";
 
     /// <summary>
-    /// Placeholder task title used until gameplay logic is wired.
+    /// Human-readable department name shown in the UI (localized).
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("placeholderTaskTitle")]
-    public string PlaceholderTaskTitle = string.Empty;
+    [ViewVariables(VVAccess.ReadWrite), DataField("departmentNameLocId")]
+    public LocId DepartmentNameLocId = "department-reward-console-placeholder-department";
 
     /// <summary>
-    /// Placeholder task description used until gameplay logic is wired.
+    /// Placeholder task title used until gameplay logic is wired (localized).
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("placeholderTaskDescription")]
-    public string PlaceholderTaskDescription = string.Empty;
+    [ViewVariables(VVAccess.ReadWrite), DataField("placeholderTaskTitleLocId")]
+    public LocId PlaceholderTaskTitleLocId = "department-reward-console-placeholder-task-title";
 
     /// <summary>
-    /// Placeholder reward text used until gameplay logic is wired.
+    /// Placeholder task description used until gameplay logic is wired (localized).
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("placeholderRewardText")]
-    public string PlaceholderRewardText = string.Empty;
+    [ViewVariables(VVAccess.ReadWrite), DataField("placeholderTaskDescriptionLocId")]
+    public LocId PlaceholderTaskDescriptionLocId = "department-reward-console-placeholder-description";
+
+    /// <summary>
+    /// Placeholder reward text used until gameplay logic is wired (localized).
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite), DataField("placeholderRewardTextLocId")]
+    public LocId PlaceholderRewardTextLocId = "department-reward-console-placeholder-reward";
+
+    /// <summary>
+    /// Access tags required to operate the console.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite), DataField("authorizedAccessTags")]
+    public HashSet<ProtoId<AccessLevelPrototype>> AuthorizedAccessTags { get; set; } = new()
+    {
+        "Captain",
+        "NanotrasenRepresentative"
+    };
 
     [ViewVariables(VVAccess.ReadWrite), DataField("failCooldown")]
     public TimeSpan FailCooldown = TimeSpan.FromSeconds(30);
@@ -58,4 +77,16 @@ public sealed partial class DepartmentRewardConsoleComponent : Component
 
     [DataField("cardSlot")]
     public ItemSlot CardSlot = new();
+
+    public string GetDepartmentName() =>
+        Loc.GetString(DepartmentNameLocId);
+
+    public string GetPlaceholderTaskTitle() =>
+        Loc.GetString(PlaceholderTaskTitleLocId);
+
+    public string GetPlaceholderTaskDescription() =>
+        Loc.GetString(PlaceholderTaskDescriptionLocId);
+
+    public string GetPlaceholderReward() =>
+        Loc.GetString(PlaceholderRewardTextLocId);
 }
