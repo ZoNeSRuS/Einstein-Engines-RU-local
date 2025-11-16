@@ -11,56 +11,43 @@ using Robust.Shared.Localization;
 namespace Content.Client.AWS.Economy.DepartmentRewards;
 
 [GenerateTypedNameReferences]
-public sealed partial class DepartmentRewardConsoleWindow : FancyWindow
+public sealed partial class DepartmentRewardMasterConsoleWindow : FancyWindow
 {
-    private readonly DepartmentRewardConsoleBoundUserInterface _owner;
     private readonly List<RichTextLabel> _historyLabels = new();
 
-    public DepartmentRewardConsoleWindow(DepartmentRewardConsoleBoundUserInterface owner)
+    public DepartmentRewardMasterConsoleWindow()
     {
-        _owner = owner;
         RobustXamlLoader.Load(this);
-
-        AuthEjectButton.OnPressed += _ => _owner.OnAuthEjectPressed();
-
         HistoryContainer.OnResized += OnHistoryContainerResized;
     }
 
-    public void UpdateState(DepartmentRewardConsoleState state)
+    public void UpdateState(DepartmentRewardMasterConsoleState state)
     {
-        DepartmentLabel.Text = state.DepartmentName;
-        StatusLabel.Text = state.StatusText;
-        AuthStatusLabel.Text = state.AuthorizationText;
-
-        AuthEjectButton.Disabled = !state.CanEject;
-
-        UpdateTasks(state.Tasks, state.ConfirmEnabled, state.FailEnabled);
+        UpdateTasks(state.Tasks);
         UpdateHistory(state.History);
     }
 
-    private void UpdateTasks(List<DepartmentRewardTaskState> tasks, bool confirmEnabled, bool failEnabled)
+    private void UpdateTasks(List<DepartmentRewardMasterTaskState> tasks)
     {
         TasksContainer.DisposeAllChildren();
 
         if (tasks.Count == 0)
         {
             var empty = new RichTextLabel { HorizontalExpand = true };
-            empty.SetMessage(Loc.GetString("department-reward-console-tasks-empty"));
+            empty.SetMessage(Loc.GetString("department-reward-master-console-empty"));
             TasksContainer.AddChild(empty);
             return;
         }
 
         foreach (var task in tasks)
         {
-            var entry = new DepartmentRewardTaskEntry();
-            entry.UpdateState(task, confirmEnabled, failEnabled);
-            entry.ConfirmPressed += _owner.OnConfirmPressed;
-            entry.FailPressed += _owner.OnFailPressed;
+            var entry = new DepartmentRewardMasterTaskEntry();
+            entry.UpdateState(task);
             TasksContainer.AddChild(entry);
         }
     }
 
-    private void UpdateHistory(List<DepartmentRewardHistoryEntry> history)
+    private void UpdateHistory(List<DepartmentRewardMasterHistoryEntry> history)
     {
         HistoryContainer.DisposeAllChildren();
         _historyLabels.Clear();
@@ -76,15 +63,22 @@ public sealed partial class DepartmentRewardConsoleWindow : FancyWindow
         foreach (var entry in history)
         {
             var label = new RichTextLabel { HorizontalExpand = true };
-            var description = ResolveHistoryDescription(entry);
-            var text = Loc.GetString("department-reward-console-history-entry",
-                ("time", entry.TimeText),
+            var description = ResolveHistoryDescription(entry.Entry);
+            var text = Loc.GetString("department-reward-master-console-history-entry",
+                ("department", entry.DepartmentName),
+                ("time", entry.Entry.TimeText),
                 ("text", description));
             label.SetMessage(text);
             HistoryContainer.AddChild(label);
             _historyLabels.Add(label);
             ApplyHistoryLabelWidth(label);
         }
+    }
+
+    private void OnHistoryContainerResized()
+    {
+        foreach (var label in _historyLabels)
+            ApplyHistoryLabelWidth(label);
     }
 
     private void ApplyHistoryLabelWidth(RichTextLabel label)
@@ -100,12 +94,6 @@ public sealed partial class DepartmentRewardConsoleWindow : FancyWindow
         var contentWidth = MathF.Max(0f, width - padding);
         label.MinWidth = contentWidth;
         label.MaxWidth = contentWidth;
-    }
-
-    private void OnHistoryContainerResized()
-    {
-        foreach (var label in _historyLabels)
-            ApplyHistoryLabelWidth(label);
     }
 
     private static string ResolveHistoryDescription(DepartmentRewardHistoryEntry entry)

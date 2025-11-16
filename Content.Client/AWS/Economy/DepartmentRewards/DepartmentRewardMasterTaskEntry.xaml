@@ -1,0 +1,16 @@
+<PanelContainer xmlns="https://spacestation14.io"
+                StyleClasses="LowDivider"
+                HorizontalExpand="True">
+    <BoxContainer Orientation="Vertical"
+                  Margin="8"
+                  SeparationOverride="4"
+                  HorizontalExpand="True">
+        <Label Name="DepartmentLabel"
+               StyleClasses="LabelHeading"
+               HorizontalExpand="True" />
+        <Control Name="TaskContainer"
+                 HorizontalExpand="True"
+                 VerticalExpand="True" />
+    </BoxContainer>
+</PanelContainer>
+

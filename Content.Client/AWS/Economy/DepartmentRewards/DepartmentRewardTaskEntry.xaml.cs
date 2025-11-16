@@ -22,15 +22,21 @@ public sealed partial class DepartmentRewardTaskEntry : PanelContainer
         BackgroundColor = Color.Black
     };
 
+    private const float DefaultContentWidth = 420f;
+    private float _contentWidth = DefaultContentWidth;
+    private bool _autoContentWidth = true;
+
     public DepartmentRewardTaskEntry()
     {
         RobustXamlLoader.Load(this);
 
         ConfirmButton.OnPressed += _ => ConfirmPressed?.Invoke();
         FailButton.OnPressed += _ => FailPressed?.Invoke();
+
+        ApplyContentWidth();
     }
 
-    public void UpdateState(DepartmentRewardTaskState task, bool confirmEnabled, bool failEnabled)
+    public void UpdateState(DepartmentRewardTaskState task, bool confirmEnabled, bool failEnabled, bool showActionButtons = true)
     {
         var stageLabel = GetStageLabel(task.Stage);
         if (!task.Visible)
@@ -64,16 +70,26 @@ public sealed partial class DepartmentRewardTaskEntry : PanelContainer
         stageMessage.Pop();
         StageTitleLabel.SetMessage(stageMessage);
 
-        RewardLabel.Text = GetRewardText(task);
+        RewardLabel.SetMessage(FormattedMessage.FromMarkupPermissive(GetRewardText(task)));
         var descriptionText = ResolveLocalizedText(task.DescriptionLocId, task.DescriptionFallback);
         DescriptionLabel.SetMessage(FormattedMessage.FromMarkupPermissive(descriptionText));
 
         if (task.Available)
         {
-            ButtonsContainer.Visible = true;
-            StatusLabel.Visible = false;
-            ConfirmButton.Disabled = !confirmEnabled;
-            FailButton.Disabled = !failEnabled;
+            if (showActionButtons)
+            {
+                ButtonsContainer.Visible = true;
+                StatusLabel.Visible = false;
+                ConfirmButton.Disabled = !confirmEnabled;
+                FailButton.Disabled = !failEnabled;
+            }
+            else
+            {
+                ButtonsContainer.Visible = false;
+                StatusLabel.Visible = true;
+                var statusText = GetStatusText(task);
+                StatusLabel.SetMessage(FormattedMessage.FromMarkup($"[color=#d7b071]{statusText}[/color]"));
+            }
         }
         else
         {
@@ -83,6 +99,36 @@ public sealed partial class DepartmentRewardTaskEntry : PanelContainer
             var statusText = GetStatusText(task);
             StatusLabel.SetMessage(FormattedMessage.FromMarkup($"[color={statusColor}]{statusText}[/color]"));
         }
+    }
+
+    protected override void Resized()
+    {
+        base.Resized();
+
+        if (!_autoContentWidth)
+            return;
+
+        var width = Math.Max(PixelWidth - 16f, DefaultContentWidth);
+        if (!MathHelper.CloseToPercent(width, _contentWidth))
+        {
+            _contentWidth = width;
+            ApplyContentWidth();
+        }
+    }
+
+    public void SetContentWidth(float width)
+    {
+        _autoContentWidth = false;
+        _contentWidth = Math.Max(width, 0f);
+        ApplyContentWidth();
+    }
+
+    private void ApplyContentWidth()
+    {
+        StageTitleLabel.MaxWidth = _contentWidth;
+        RewardLabel.MaxWidth = _contentWidth;
+        DescriptionLabel.MaxWidth = _contentWidth;
+        StatusLabel.MaxWidth = _contentWidth;
     }
 
     private static string ResolveLocalizedText(string? locId, string? fallback)

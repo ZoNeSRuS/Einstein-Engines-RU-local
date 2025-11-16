@@ -43,3 +43,21 @@
   - type: DepartmentRewardConsole
     departmentId: NT-Engineering
     departmentNameLocId: department-reward-department-engineering
+
+- type: entity
+  id: DepartmentRewardConsoleMaster
+  parent: BaseComputer
+  name: ent-DepartmentRewardConsoleMaster
+  suffix: Command
+  components:
+  - type: ActivatableUI
+    key: enum.DepartmentRewardMasterConsoleUiKey.Key
+    singleUser: true
+  - type: UserInterface
+    interfaces:
+      enum.DepartmentRewardMasterConsoleUiKey.Key:
+        type: DepartmentRewardMasterConsoleBoundUserInterface
+  - type: DepartmentRewardMasterConsole
+  - type: AccessReader
+    access:
+    - - Captain

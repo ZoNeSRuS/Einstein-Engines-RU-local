@@ -91,3 +91,11 @@ ent-DepartmentRewardConsoleCargo = Консоль наград Карго
     .desc = Консоль Карго для отслеживания заданий и выплат.
 ent-DepartmentRewardConsoleEngineering = Консоль наград инженерного отдела
     .desc = Консоль инженерного отдела для отслеживания заданий и выплат.
+department-reward-master-console-title = Консоль контроля отделов
+department-reward-master-console-empty = Нет активных задач наград.
+department-reward-master-console-tasks-label = Активные задачи
+department-reward-master-console-history-label = Последние действия
+department-reward-master-console-history-entry = {$department}: {$time} - {$text}
+
+ent-DepartmentRewardConsoleMaster = Консоль контроля отделов
+    .desc = Командный терминал, который отображает состояние всех отделенческих консолей наград.

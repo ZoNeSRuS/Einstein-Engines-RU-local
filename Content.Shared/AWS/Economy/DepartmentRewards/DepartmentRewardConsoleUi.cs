@@ -37,6 +37,51 @@ public sealed class DepartmentRewardConsoleState : BoundUserInterfaceState
 }
 
 [Serializable, NetSerializable]
+public sealed class DepartmentRewardMasterConsoleState : BoundUserInterfaceState
+{
+    public List<DepartmentRewardMasterTaskState> Tasks;
+    public List<DepartmentRewardMasterHistoryEntry> History;
+
+    public DepartmentRewardMasterConsoleState(
+        List<DepartmentRewardMasterTaskState> tasks,
+        List<DepartmentRewardMasterHistoryEntry> history)
+    {
+        Tasks = tasks;
+        History = history;
+    }
+}
+
+[Serializable, NetSerializable]
+public sealed class DepartmentRewardMasterTaskState
+{
+    public string DepartmentId;
+    public string DepartmentName;
+    public DepartmentRewardTaskState Task;
+
+    public DepartmentRewardMasterTaskState(string departmentId, string departmentName, DepartmentRewardTaskState task)
+    {
+        DepartmentId = departmentId;
+        DepartmentName = departmentName;
+        Task = task;
+    }
+}
+
+[Serializable, NetSerializable]
+public sealed class DepartmentRewardMasterHistoryEntry
+{
+    public string DepartmentId;
+    public string DepartmentName;
+    public DepartmentRewardHistoryEntry Entry;
+
+    public DepartmentRewardMasterHistoryEntry(string departmentId, string departmentName, DepartmentRewardHistoryEntry entry)
+    {
+        DepartmentId = departmentId;
+        DepartmentName = departmentName;
+        Entry = entry;
+    }
+}
+
+[Serializable, NetSerializable]
 public sealed class DepartmentRewardTaskState
 {
     public DepartmentRewardStage Stage;
@@ -99,6 +144,7 @@ public sealed class DepartmentRewardHistoryEntry
     public string? TaskTitleFallback;
     public int? Penalty;
     public string? DescriptionFallback;
+    public float StationTimeSeconds;
 
     public DepartmentRewardHistoryEntry(
         string timeText,
@@ -106,7 +152,8 @@ public sealed class DepartmentRewardHistoryEntry
         string? taskTitleLocId,
         string? taskTitleFallback,
         int? penalty,
-        string? descriptionFallback)
+        string? descriptionFallback,
+        float stationTimeSeconds)
     {
         TimeText = timeText;
         Type = type;
@@ -114,6 +161,7 @@ public sealed class DepartmentRewardHistoryEntry
         TaskTitleFallback = taskTitleFallback;
         Penalty = penalty;
         DescriptionFallback = descriptionFallback;
+        StationTimeSeconds = stationTimeSeconds;
     }
 }
 
@@ -132,6 +180,12 @@ public sealed class DepartmentRewardConsoleFailMessage : BoundUserInterfaceMessa
 
 [Serializable, NetSerializable]
 public enum DepartmentRewardConsoleUiKey
+{
+    Key = 0
+}
+
+[Serializable, NetSerializable]
+public enum DepartmentRewardMasterConsoleUiKey
 {
     Key = 0
 }

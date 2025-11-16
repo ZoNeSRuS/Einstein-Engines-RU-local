@@ -45,6 +45,8 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         SubscribeLocalEvent<DepartmentRewardConsoleComponent, DepartmentRewardConsoleConfirmMessage>(OnConfirm);
         SubscribeLocalEvent<DepartmentRewardConsoleComponent, DepartmentRewardConsoleFailMessage>(OnFail);
         SubscribeLocalEvent<DepartmentRewardConsoleComponent, MapInitEvent>(OnConsoleMapInit);
+        SubscribeLocalEvent<DepartmentRewardMasterConsoleComponent, BoundUIOpenedEvent>(OnMasterConsoleOpened);
+        SubscribeLocalEvent<DepartmentRewardMasterConsoleComponent, MapInitEvent>(OnMasterConsoleMapInit);
     }
 
     public override void Update(float frameTime)
@@ -66,6 +68,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         foreach (var entry in pending)
         {
             UpdateConsolesForDepartment(entry.ServerUid, entry.DepartmentId);
+            UpdateMasterConsolesForServer(entry.ServerUid);
         }
     }
 
@@ -77,10 +80,11 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
 
     private void OnConsoleMapInit(EntityUid uid, DepartmentRewardConsoleComponent component, MapInitEvent args)
     {
-        var state = GetDepartmentState(uid, component, out _);
+        var state = GetDepartmentState(uid, component, out var serverUid);
         InitializeStageTasks(component, state);
         ScheduleTimerUpdates(state);
         UpdateConsoleUi(uid, component, state);
+        UpdateMasterConsolesForServer(serverUid);
     }
 
     private void OnConsoleOpened(EntityUid uid, DepartmentRewardConsoleComponent component, BoundUIOpenedEvent args)
@@ -88,6 +92,17 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         var state = GetDepartmentState(uid, component, out _);
         EnsureStageTasksInitialized(component, state);
         UpdateConsoleUi(uid, component, state);
+    }
+
+    private void OnMasterConsoleOpened(EntityUid uid, DepartmentRewardMasterConsoleComponent component, BoundUIOpenedEvent args)
+    {
+        UpdateMasterConsoleUi(uid, component);
+    }
+
+    private void OnMasterConsoleMapInit(EntityUid uid, DepartmentRewardMasterConsoleComponent component, MapInitEvent args)
+    {
+        EnsureServerComponent(uid, out _);
+        UpdateMasterConsoleUi(uid, component);
     }
 
     private void OnConfirm(EntityUid uid, DepartmentRewardConsoleComponent component, DepartmentRewardConsoleConfirmMessage args)
@@ -136,6 +151,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
 
         ScheduleTimerUpdates(state);
         UpdateConsolesForDepartment(serverUid, component.DepartmentId);
+        UpdateMasterConsolesForServer(serverUid);
     }
 
     private void OnFail(EntityUid uid, DepartmentRewardConsoleComponent component, DepartmentRewardConsoleFailMessage args)
@@ -181,6 +197,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         AssignStageTask(component, state, stage, component.FailCooldown);
         ScheduleTimerUpdates(state);
         UpdateConsolesForDepartment(serverUid, component.DepartmentId);
+        UpdateMasterConsolesForServer(serverUid);
     }
 
     private void UpdateConsoleUi(EntityUid uid, DepartmentRewardConsoleComponent component, DepartmentRewardDepartmentState? state = null)
@@ -194,9 +211,8 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
     {
         EnsureStageTasksInitialized(component, state);
 
-        var department = component.GetDepartmentName();
-
-        var tasks = new List<DepartmentRewardTaskState>();
+        var department = ResolveDepartmentName(component, component.DepartmentId);
+        var tasks = BuildTaskStates(component, state);
         var history = new List<DepartmentRewardHistoryEntry>(state.History);
 
         var cardName = Loc.GetString("department-reward-console-auth-missing");
@@ -210,66 +226,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         }
 
         var currentStageAvailable = TryGetCurrentStageTask(state, out _, out _);
-        string statusText;
-        if (_bank.TryGetAccount(component.DepartmentId, out var account))
-        {
-            var stateLoc = account.Value.Comp.Blocked
-                ? "department-reward-console-status-account-blocked"
-                : "department-reward-console-status-account-available";
-            statusText = Loc.GetString("department-reward-console-status-account",
-                ("balance", account.Value.Comp.Balance),
-                ("state", Loc.GetString(stateLoc)));
-        }
-        else
-        {
-            statusText = Loc.GetString("department-reward-console-status-missing");
-        }
-
-        foreach (var stage in StageOrder)
-        {
-            var data = state.GetRuntime(stage);
-            var titleFallback = data.Title ?? component.GetPlaceholderTaskTitle();
-            var descriptionFallback = data.Description ?? component.GetPlaceholderTaskDescription();
-            var titleLocId = data.TitleLocId?.Id;
-            var descriptionLocId = data.DescriptionLocId?.Id;
-            var rewardAmount = data.Reward;
-            var rewardFallback = component.GetPlaceholderReward();
-
-            var isUnlocked = _timing.CurTime >= data.UnlockTime;
-            var previousCompleted = ArePreviousStagesCompleted(state, stage);
-            var available = isUnlocked && previousCompleted && !data.Completed;
-
-            var visible = isUnlocked && previousCompleted;
-            var status = DepartmentRewardTaskStatus.Available;
-            string? unlockStationTimeText = null;
-            if (data.Completed)
-            {
-                status = DepartmentRewardTaskStatus.Completed;
-            }
-            else if (!isUnlocked)
-            {
-                status = DepartmentRewardTaskStatus.Cooldown;
-                unlockStationTimeText = FormatStationTime(GetStationTime(data.UnlockTime));
-            }
-            else if (!previousCompleted)
-            {
-                status = DepartmentRewardTaskStatus.WaitingPrevious;
-            }
-
-            tasks.Add(new DepartmentRewardTaskState(
-                stage,
-                available,
-                data.Completed,
-                visible,
-                titleLocId,
-                titleFallback,
-                descriptionLocId,
-                descriptionFallback,
-                rewardAmount,
-                rewardFallback,
-                status,
-                unlockStationTimeText));
-        }
+        var statusText = BuildDepartmentStatusText(component.DepartmentId);
 
         return new DepartmentRewardConsoleState(
             department,
@@ -296,7 +253,8 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
             taskTitleLocId,
             taskTitleFallback,
             penalty,
-            BuildHistoryFallback(type, taskTitleFallback, penalty));
+            BuildHistoryFallback(type, taskTitleFallback, penalty),
+            (float) stationTime.TotalSeconds);
         state.History.Insert(0, entry);
         if (state.History.Count > 5)
             state.History.RemoveAt(state.History.Count - 1);
@@ -315,6 +273,105 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
                 ("penalty", penalty ?? 0)),
             _ => taskTitle
         };
+    }
+
+    private List<DepartmentRewardTaskState> BuildTaskStates(DepartmentRewardConsoleComponent? component, DepartmentRewardDepartmentState state)
+    {
+        var tasks = new List<DepartmentRewardTaskState>();
+        foreach (var stage in StageOrder)
+        {
+            var data = state.GetRuntime(stage);
+            tasks.Add(BuildTaskState(component, state, stage, data));
+        }
+
+        return tasks;
+    }
+
+    private DepartmentRewardTaskState BuildTaskState(DepartmentRewardConsoleComponent? component, DepartmentRewardDepartmentState state, DepartmentRewardStage stage, DepartmentRewardStageRuntime data)
+    {
+        var titleFallback = data.Title ?? ResolvePlaceholderTaskTitle(component);
+        var descriptionFallback = data.Description ?? ResolvePlaceholderTaskDescription(component);
+        var titleLocId = data.TitleLocId?.Id;
+        var descriptionLocId = data.DescriptionLocId?.Id;
+        var rewardAmount = data.Reward;
+        var rewardFallback = ResolvePlaceholderRewardText(component);
+
+        var isUnlocked = _timing.CurTime >= data.UnlockTime;
+        var previousCompleted = ArePreviousStagesCompleted(state, stage);
+        var available = isUnlocked && previousCompleted && !data.Completed;
+
+        var visible = isUnlocked && previousCompleted;
+        var status = DepartmentRewardTaskStatus.Available;
+        string? unlockStationTimeText = null;
+        if (data.Completed)
+        {
+            status = DepartmentRewardTaskStatus.Completed;
+        }
+        else if (!isUnlocked)
+        {
+            status = DepartmentRewardTaskStatus.Cooldown;
+            unlockStationTimeText = FormatStationTime(GetStationTime(data.UnlockTime));
+        }
+        else if (!previousCompleted)
+        {
+            status = DepartmentRewardTaskStatus.WaitingPrevious;
+        }
+
+        return new DepartmentRewardTaskState(
+            stage,
+            available,
+            data.Completed,
+            visible,
+            titleLocId,
+            titleFallback,
+            descriptionLocId,
+            descriptionFallback,
+            rewardAmount,
+            rewardFallback,
+            status,
+            unlockStationTimeText);
+    }
+
+    private bool TryBuildActiveTaskState(DepartmentRewardConsoleComponent? component, DepartmentRewardDepartmentState state, out DepartmentRewardTaskState taskState)
+    {
+        taskState = default!;
+        if (!TryGetCurrentStageTask(state, out var stage, out var runtime))
+            return false;
+
+        taskState = BuildTaskState(component, state, stage, runtime);
+        return true;
+    }
+
+    private string ResolveDepartmentName(DepartmentRewardConsoleComponent? component, string departmentId)
+    {
+        if (component != null)
+            return component.GetDepartmentName();
+
+        return Loc.GetString("department-reward-console-department-fallback", ("department", departmentId));
+    }
+
+    private string ResolvePlaceholderTaskTitle(DepartmentRewardConsoleComponent? component) =>
+        component?.GetPlaceholderTaskTitle() ?? Loc.GetString("department-reward-console-placeholder-task-title");
+
+    private string ResolvePlaceholderTaskDescription(DepartmentRewardConsoleComponent? component) =>
+        component?.GetPlaceholderTaskDescription() ?? Loc.GetString("department-reward-console-placeholder-description");
+
+    private string ResolvePlaceholderRewardText(DepartmentRewardConsoleComponent? component) =>
+        component?.GetPlaceholderReward() ?? Loc.GetString("department-reward-console-placeholder-reward");
+
+    private string BuildDepartmentStatusText(string departmentId)
+    {
+        if (_bank.TryGetAccount(departmentId, out var account))
+        {
+            var stateLoc = account.Value.Comp.Blocked
+                ? "department-reward-console-status-account-blocked"
+                : "department-reward-console-status-account-available";
+            return Loc.GetString("department-reward-console-status-account",
+                ("balance", account.Value.Comp.Balance),
+                ("state", Loc.GetString(stateLoc)));
+        }
+
+        return Loc.GetString("department-reward-console-status-missing");
     }
 
     private void ScheduleTimerUpdates(DepartmentRewardDepartmentState state)
@@ -535,6 +592,119 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
 
             UpdateConsoleUi(uid, component, state);
         }
+    }
+
+    private void UpdateMasterConsolesForServer(EntityUid serverUid)
+    {
+        var query = EntityQueryEnumerator<DepartmentRewardMasterConsoleComponent>();
+        while (query.MoveNext(out var uid, out var component))
+        {
+            var server = EnsureServerComponent(uid, out var consoleServerUid);
+            if (consoleServerUid != serverUid)
+                continue;
+
+            UpdateMasterConsoleUi(uid, component, consoleServerUid, server);
+        }
+    }
+
+    private void UpdateMasterConsoleUi(EntityUid uid, DepartmentRewardMasterConsoleComponent component, EntityUid? serverUidOverride = null, DepartmentRewardServerComponent? serverOverride = null)
+    {
+        DepartmentRewardServerComponent server;
+        EntityUid serverUid;
+        if (serverOverride != null && serverUidOverride != null)
+        {
+            server = serverOverride;
+            serverUid = serverUidOverride.Value;
+        }
+        else
+        {
+            server = EnsureServerComponent(uid, out serverUid);
+        }
+
+        EnsureServerDepartmentsRegistered(serverUid, server);
+        var uiState = BuildMasterConsoleState(component, serverUid, server);
+        _uiSystem.SetUiState(uid, DepartmentRewardMasterConsoleUiKey.Key, uiState);
+    }
+
+    private DepartmentRewardMasterConsoleState BuildMasterConsoleState(DepartmentRewardMasterConsoleComponent component, EntityUid serverUid, DepartmentRewardServerComponent server)
+    {
+        var tasks = new List<DepartmentRewardMasterTaskState>();
+        var history = new List<DepartmentRewardMasterHistoryEntry>();
+
+        foreach (var (departmentId, departmentState) in server.Departments)
+        {
+            if (!IsDepartmentVisible(component, departmentId))
+                continue;
+
+            var consoleComponent = FindDepartmentConsoleComponent(serverUid, departmentId);
+            if (consoleComponent != null)
+                EnsureStageTasksInitialized(consoleComponent, departmentState);
+
+            var departmentName = ResolveDepartmentName(consoleComponent, departmentId);
+
+            if (TryBuildActiveTaskState(consoleComponent, departmentState, out var task))
+            {
+                if (task.Available)
+                {
+                    tasks.Add(new DepartmentRewardMasterTaskState(departmentId, departmentName, task));
+                }
+            }
+
+            foreach (var entry in departmentState.History)
+            {
+                history.Add(new DepartmentRewardMasterHistoryEntry(departmentId, departmentName, entry));
+            }
+        }
+
+        tasks.Sort((a, b) => string.Compare(a.DepartmentName, b.DepartmentName, StringComparison.OrdinalIgnoreCase));
+        history.Sort((a, b) => b.Entry.StationTimeSeconds.CompareTo(a.Entry.StationTimeSeconds));
+
+        return new DepartmentRewardMasterConsoleState(tasks, history);
+    }
+
+    private bool IsDepartmentVisible(DepartmentRewardMasterConsoleComponent component, string departmentId)
+    {
+        if (component.VisibleDepartments.Count == 0)
+            return true;
+
+        foreach (var filter in component.VisibleDepartments)
+        {
+            if (string.Equals(filter, departmentId, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private void EnsureServerDepartmentsRegistered(EntityUid serverUid, DepartmentRewardServerComponent server)
+    {
+        var query = EntityQueryEnumerator<DepartmentRewardConsoleComponent>();
+        while (query.MoveNext(out var uid, out var component))
+        {
+            var consoleServer = EnsureServerComponent(uid, out var consoleServerUid);
+            if (consoleServerUid != serverUid)
+                continue;
+
+            GetDepartmentState(uid, component, out _);
+        }
+    }
+
+    private DepartmentRewardConsoleComponent? FindDepartmentConsoleComponent(EntityUid serverUid, string departmentId)
+    {
+        var query = EntityQueryEnumerator<DepartmentRewardConsoleComponent>();
+        while (query.MoveNext(out var uid, out var component))
+        {
+            var consoleServer = EnsureServerComponent(uid, out var consoleServerUid);
+            if (consoleServerUid != serverUid)
+                continue;
+
+            if (!string.Equals(component.DepartmentId, departmentId, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            return component;
+        }
+
+        return null;
     }
 
     private readonly struct DepartmentStateKey : IEquatable<DepartmentStateKey>

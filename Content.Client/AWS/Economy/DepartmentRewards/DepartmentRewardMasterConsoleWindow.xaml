@@ -1,0 +1,35 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      Title="{Loc 'department-reward-master-console-title'}"
+                      MinSize="960 520"
+                      Resizable="True">
+    <BoxContainer Orientation="Horizontal" HorizontalExpand="True" VerticalExpand="True" Margin="8" SeparationOverride="6">
+        <PanelContainer StyleClasses="BackgroundDark" HorizontalExpand="True" VerticalExpand="True" SizeFlagsStretchRatio="1.5">
+            <BoxContainer Orientation="Vertical" Margin="8" SeparationOverride="6" HorizontalExpand="True" VerticalExpand="True">
+                <Label Text="{Loc 'department-reward-master-console-tasks-label'}" StyleClasses="LabelBold" />
+                <PanelContainer StyleClasses="LowDivider" Margin="0 4" />
+                <ScrollContainer Name="TasksScroll" HorizontalExpand="True" VerticalExpand="True" HScrollEnabled="False">
+                    <BoxContainer Name="TasksContainer"
+                                  Orientation="Vertical"
+                                  HorizontalExpand="True"
+                                  VerticalExpand="True"
+                                  SeparationOverride="8" />
+                </ScrollContainer>
+            </BoxContainer>
+        </PanelContainer>
+
+        <PanelContainer StyleClasses="BackgroundDark" HorizontalExpand="True" VerticalExpand="True" SizeFlagsStretchRatio="1">
+            <BoxContainer Orientation="Vertical" Margin="8" SeparationOverride="6" HorizontalExpand="True" VerticalExpand="True">
+                <Label Text="{Loc 'department-reward-master-console-history-label'}" StyleClasses="LabelBold" />
+                <PanelContainer StyleClasses="LowDivider" Margin="0 4" />
+                <ScrollContainer Name="HistoryScroll" HorizontalExpand="True" VerticalExpand="True" HScrollEnabled="False">
+                    <BoxContainer Name="HistoryContainer"
+                                  Orientation="Vertical"
+                                  HorizontalExpand="True"
+                                  VerticalExpand="True"
+                                  SeparationOverride="4" />
+                </ScrollContainer>
+            </BoxContainer>
+        </PanelContainer>
+    </BoxContainer>
+</controls:FancyWindow>

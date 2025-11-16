@@ -30,6 +30,7 @@ department-reward-console-placeholder-department = Department
 department-reward-console-placeholder-task-title = Prepare the first shipment
 department-reward-console-placeholder-description = This console currently runs in preview mode. Full tasks will arrive later.
 department-reward-console-placeholder-reward = Reward: 0 credits
+department-reward-console-department-fallback = {$department}
 department-reward-console-popup-not-implemented = Department rewards are not ready yet. Please wait for the next update.
 department-reward-console-tasks-empty = The department has no configured reward tasks.
 department-reward-console-status-account = Balance: {$balance} credits. {$state}
@@ -64,12 +65,20 @@ department-reward-engineering-late-grid-desc = Lay redundant high-capacity cable
 department-reward-engineering-late-emergency-title = Emergency response drill
 department-reward-engineering-late-emergency-desc = Stage portable scrubbers, power cells, and repair kits near Medbay, Brig, and EVA so the crew can respond instantly to disasters.
 
+department-reward-master-console-title = Department Oversight Console
+department-reward-master-console-empty = No active departmental reward tasks.
+department-reward-master-console-tasks-label = Active tasks
+department-reward-master-console-history-label = Recent actions
+department-reward-master-console-history-entry = {$department}: {$time} – {$text}
+
 ent-DepartmentRewardConsoleBase = Department Reward Console
     .desc = A terminal that issues departmental tasks and bonus payouts.
 ent-DepartmentRewardConsoleCargo = Department Reward Console (Cargo)
     .desc = A supply department console for tracking tasks and bonuses.
 ent-DepartmentRewardConsoleEngineering = Department Reward Console (Engineering)
     .desc = An engineering console for tracking department tasks and payouts.
+ent-DepartmentRewardConsoleMaster = Department Oversight Console
+    .desc = A command terminal that mirrors every departmental reward console for review.
 
 department-reward-cargo-start-deliver-title = Refill the raw material stockpile
 department-reward-cargo-start-deliver-desc = Accept and deliver three shipments of basic materials (metal, glass, or plastic) before the shift ramps up.
