@@ -78,3 +78,84 @@
   description: department-reward-cargo-late-centcom-desc
   rewardAmount: 4200
   penaltyMultiplier: 2.5
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringStartGrid
+  departmentId: NT-Engineering
+  stage: Start
+  title: department-reward-engineering-start-grid-title
+  description: department-reward-engineering-start-grid-desc
+  rewardAmount: 1100
+  penaltyMultiplier: 1.5
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringStartAtmos
+  departmentId: NT-Engineering
+  stage: Start
+  title: department-reward-engineering-start-atmos-title
+  description: department-reward-engineering-start-atmos-desc
+  rewardAmount: 1200
+  penaltyMultiplier: 1.5
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringStartMaintenance
+  departmentId: NT-Engineering
+  stage: Start
+  title: department-reward-engineering-start-maint-title
+  description: department-reward-engineering-start-maint-desc
+  rewardAmount: 1000
+  penaltyMultiplier: 1.5
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringMidRepairs
+  departmentId: NT-Engineering
+  stage: Mid
+  title: department-reward-engineering-mid-repairs-title
+  description: department-reward-engineering-mid-repairs-desc
+  rewardAmount: 2300
+  penaltyMultiplier: 1.7
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringMidUpgrade
+  departmentId: NT-Engineering
+  stage: Mid
+  title: department-reward-engineering-mid-upgrade-title
+  description: department-reward-engineering-mid-upgrade-desc
+  rewardAmount: 2400
+  penaltyMultiplier: 1.7
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringMidSensors
+  departmentId: NT-Engineering
+  stage: Mid
+  title: department-reward-engineering-mid-sensors-title
+  description: department-reward-engineering-mid-sensors-desc
+  rewardAmount: 2200
+  penaltyMultiplier: 1.75
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringLateHull
+  departmentId: NT-Engineering
+  stage: Late
+  title: department-reward-engineering-late-hull-title
+  description: department-reward-engineering-late-hull-desc
+  rewardAmount: 3600
+  penaltyMultiplier: 2.0
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringLateGrid
+  departmentId: NT-Engineering
+  stage: Late
+  title: department-reward-engineering-late-grid-title
+  description: department-reward-engineering-late-grid-desc
+  rewardAmount: 3800
+  penaltyMultiplier: 2.2
+
+- type: departmentRewardTask
+  id: DeptRewardEngineeringLateEmergency
+  departmentId: NT-Engineering
+  stage: Late
+  title: department-reward-engineering-late-emergency-title
+  description: department-reward-engineering-late-emergency-desc
+  rewardAmount: 4000
+  penaltyMultiplier: 2.4

@@ -28,7 +28,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly EconomyBankAccountSystem _bank = default!;
     [Dependency] private readonly GameTicker _gameTicker = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly MapSystem _mapSystem = default!;
 
     private static readonly DepartmentRewardStage[] StageOrder =
     {
@@ -205,7 +205,7 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         if (component.CardSlot.Item is { Valid: true } cardEntity)
         {
             hasCard = true;
-            hasAuthorizedAccess = HasAuthorizedAccess(cardEntity);
+            hasAuthorizedAccess = HasAuthorizedAccess(cardEntity, component);
             cardName = MetaData(cardEntity).EntityName ?? string.Empty;
         }
 
@@ -494,9 +494,9 @@ public sealed partial class DepartmentRewardConsoleSystem : SharedDepartmentRewa
         }
 
         var xform = Transform(consoleUid);
-        if (xform.MapID != MapId.Nullspace && _mapManager.MapExists(xform.MapID))
+        if (xform.MapID != MapId.Nullspace && _mapSystem.MapExists(xform.MapID))
         {
-            serverUid = _mapManager.GetMapEntityId(xform.MapID);
+            serverUid = _mapSystem.GetMap(xform.MapID);
         }
         else
         {

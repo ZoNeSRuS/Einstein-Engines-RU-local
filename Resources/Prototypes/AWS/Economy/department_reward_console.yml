@@ -33,3 +33,13 @@
   - type: DepartmentRewardConsole
     departmentId: NT-Cargo
     departmentNameLocId: department-reward-department-cargo
+
+- type: entity
+  id: DepartmentRewardConsoleEngineering
+  parent: DepartmentRewardConsoleBase
+  name: ent-DepartmentRewardConsoleEngineering
+  suffix: Engineering
+  components:
+  - type: DepartmentRewardConsole
+    departmentId: NT-Engineering
+    departmentNameLocId: department-reward-department-engineering
