@@ -8,6 +8,7 @@ department-reward-console-stage-label = Текущая стадия
 department-reward-console-reward-label = Награда
 department-reward-console-status-label = Состояние счета
 department-reward-console-auth-label = Авторизация:
+department-reward-console-auth-missing = Карта не обнаружена
 department-reward-console-auth-filled = {$name}
 department-reward-console-history-label = Журнал операций
 department-reward-console-history-empty = Пока что не выполнено ни одной задачи.

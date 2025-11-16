@@ -518,7 +518,7 @@ namespace Content.Server.AWS.Economy.Bank
                     if (account.Balance < 0 || (ulong) account.Balance < amount)
                         return false;
                 }
-                else if (account.Balance - signedAmount < long.MinValue)
+                else if (account.Balance < long.MinValue + signedAmount)
                 {
                     return false;
                 }
@@ -598,7 +598,7 @@ namespace Content.Server.AWS.Economy.Bank
                 if (sender.Balance < 0 || (ulong) sender.Balance < amount)
                     return false;
             }
-            else if (sender.Balance - signedAmount < long.MinValue)
+            else if (sender.Balance < long.MinValue + signedAmount)
             {
                 return false;
             }

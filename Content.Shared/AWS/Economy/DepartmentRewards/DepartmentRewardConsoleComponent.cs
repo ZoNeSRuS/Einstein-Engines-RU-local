@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using Content.Shared.Containers.ItemSlots;
 using Robust.Shared.GameStates;
-using Robust.Shared.Localization;
-using Robust.Shared.Prototypes;
 
 namespace Content.Shared.AWS.Economy.DepartmentRewards;
 
@@ -50,9 +47,6 @@ public sealed partial class DepartmentRewardConsoleComponent : Component
     [ViewVariables(VVAccess.ReadWrite), DataField("failCooldown")]
     public TimeSpan FailCooldown = TimeSpan.FromSeconds(30);
 
-    [ViewVariables(VVAccess.ReadWrite)]
-    public TimeSpan? NextTimerUpdate;
-
     [DataField("midUnlockOffset")]
     public TimeSpan MidUnlockOffset = TimeSpan.FromSeconds(60);
 
@@ -64,31 +58,4 @@ public sealed partial class DepartmentRewardConsoleComponent : Component
 
     [DataField("cardSlot")]
     public ItemSlot CardSlot = new();
-
-    [DataField]
-    public List<DepartmentRewardHistoryEntry> History = new();
-
-    [DataField]
-    public bool StageTasksInitialized;
-
-    [ViewVariables]
-    public Dictionary<DepartmentRewardStage, DepartmentRewardStageRuntime> StageTasks { get; } = new()
-    {
-        { DepartmentRewardStage.Start, new DepartmentRewardStageRuntime() },
-        { DepartmentRewardStage.Mid, new DepartmentRewardStageRuntime() },
-        { DepartmentRewardStage.Late, new DepartmentRewardStageRuntime() }
-    };
-}
-
-public sealed class DepartmentRewardStageRuntime
-{
-    public ProtoId<DepartmentRewardTaskPrototype>? TaskId;
-    public LocId? TitleLocId;
-    public string? Title;
-    public LocId? DescriptionLocId;
-    public string? Description;
-    public int Reward;
-    public float PenaltyMultiplier = DepartmentRewardConsoleComponent.DefaultPenaltyMultiplier;
-    public bool Completed;
-    public TimeSpan UnlockTime;
 }

@@ -8,6 +8,7 @@ department-reward-console-stage-label = Current stage
 department-reward-console-reward-label = Reward
 department-reward-console-status-label = System status
 department-reward-console-auth-label = Authorization:
+department-reward-console-auth-missing = No card detected
 department-reward-console-auth-filled = {$name}
 department-reward-console-history-label = Task history
 department-reward-console-history-empty = No tasks have been completed yet.
