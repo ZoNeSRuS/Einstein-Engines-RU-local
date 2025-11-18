@@ -32,7 +32,7 @@ public sealed class DepartmentRewardPdaSystem : EntitySystem
 
         foreach (var department in idCard.JobDepartments)
         {
-            var rewardDepartmentId = $"NT-{department.Id}";
+            var rewardDepartmentId = GetRewardDepartmentId(department.Id);
             if (!_departmentRewardConsole.TryGetActiveDepartmentTask(uid, rewardDepartmentId, out var task))
                 continue;
 
@@ -53,6 +53,15 @@ public sealed class DepartmentRewardPdaSystem : EntitySystem
             args.Handled = true;
             return;
         }
+    }
+    //Почему карго везде называется логистика, боже
+    private string GetRewardDepartmentId(string departmentId)
+    {
+        return departmentId switch
+        {
+            "Logistics" => "NT-Cargo",
+            _ => $"NT-{departmentId}"
+        };
     }
 
     private string ResolveTaskText(string? locId, string? fallback)

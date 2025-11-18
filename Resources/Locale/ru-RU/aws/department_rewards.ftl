@@ -30,6 +30,7 @@ department-reward-console-placeholder-department = Отдел
 department-reward-console-placeholder-task-title = Подготовьте стартовую поставку
 department-reward-console-placeholder-description = Консоль работает в демонстрационном режиме. Полный список задач появится позже.
 department-reward-console-placeholder-reward = Награда: 0 кредитов
+department-reward-console-department-fallback = {$department}
 department-reward-console-popup-not-implemented = Консоль наград пока не активна. Подождите следующего обновления.
 department-reward-console-tasks-empty = Для отдела не настроены задания.
 department-reward-console-status-account = Баланс: {$balance} кредитов. {$state}
@@ -103,5 +104,4 @@ department-reward-pda-instruction-display =
     Задача: [color=white]{ $title }[/color]
     Инструкция: [color=white]{ $instruction }[/color]
 department-reward-pda-instruction-copy = Задача: { $title }\nИнструкция: { $instruction }
-Инструкция: {  }
 

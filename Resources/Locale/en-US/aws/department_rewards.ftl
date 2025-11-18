@@ -102,4 +102,3 @@ department-reward-pda-instruction-display =
     Task: [color=white]{ $title }[/color]
     Instruction: [color=white]{ $instruction }[/color]
 department-reward-pda-instruction-copy = Task: { $title }\nInstruction: { $instruction }
-Instruction: {  }
